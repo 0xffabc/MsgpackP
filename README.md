@@ -83,9 +83,7 @@ socketWorker.postMessage("ready");
 
 # Limitations 
 
-Completely unsupported types: timestamp, bin, ext
-
-Partial support: str(8, 16, 32), arr(16, 32), map(16, 32) - not supported for decoding
+Completely unsupported types: timestamp, bin, ext, float32
 
 # Bugs
 
