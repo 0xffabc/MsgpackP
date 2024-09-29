@@ -4,6 +4,8 @@ Fast msgpack implementation written in javascript and made specifically for moom
 
 Prone to most common packets used for lagging or crashing servers that use msgpack-lite.
 
+Try it at https://0xffabc.github.io/msgpackp-example.html
+
 # Documentation 
 
 ## _encode(data: any[] | any except function) -> Uint8Array
