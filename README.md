@@ -1,10 +1,10 @@
-# msgpackp
+# MsgpackP 
 
 Fast msgpack implementation written in javascript and made specifically for moomoo.
 
 Prone to most common packets used for lagging or crashing servers that use msgpack-lite.
 
-Try it at https://0xffabc.github.io/msgpackp-example.html
+Try it at https://0xffabc.github.io/MsgpackP/msgpackp-example.html
 
 # Documentation 
 
