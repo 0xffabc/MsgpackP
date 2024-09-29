@@ -167,7 +167,7 @@ class CoreDecode {
     } else if (byte == 0xce) {
       return this.readByte() << 24 | this.readByte() << 16 | this.readByte() << 8 | this.readByte();
     } else if (byte == 0xcf) {
-      return 0n | BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64;
+      return 0n | BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64n;
     } else if (byte > 0xe0 && byte < 0xff) {
       return -(0xe0 + byte);
     } else if (byte == 0xd0) {
@@ -177,7 +177,7 @@ class CoreDecode {
     } else if (byte == 0xd2) {
       return -(this.readByte() << 24 | this.readByte() << 16 | this.readByte() << 8 | this.readByte());
     } else if (byte == 0xd3) {
-      return (0n | BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64) * (-1n);
+      return (0n | BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64n) * (-1n);
     } else if (byte == 0xcb) {
       const res = this.view.getFloat64(this.offset);
       this.skip(8);
