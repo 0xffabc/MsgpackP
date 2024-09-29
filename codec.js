@@ -101,7 +101,7 @@ class CoreEncode {
       }
     } else if (typeof data == "string") this.fixstr(data);
     else if (typeof data == "number") this.add_num(data);
-    else if (typeof data == "boolean") this.boolean(data ? 0xC3 : 0xC2);
+    else if (typeof data == "boolean") this.write(data ? 0xC3 : 0xC2);
     else if (typeof data == "undefined" || isNaN(data) || data == null) this.write(0xc0);
     else throw new TypeError("Unknown type: " + typeof data);
     
