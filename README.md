@@ -1,6 +1,7 @@
 # msgpackp
 
 Fast msgpack implementation written in javascript and made specifically for moomoo
+
 Prone to most common packets used for lagging or crashing servers that use msgpack-lite
 
 # Documentation 
