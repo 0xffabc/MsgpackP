@@ -91,7 +91,7 @@ class CoreEncode {
       } else if (num > -32768) {
         this.write(0xd1, num >>> 8, num);
       } else if (num > -4294967296) {
-          this.write(0xd2, num >>> 24, num >>> 16, num >>> 8, data);
+          this.write(0xd2, num >>> 24, num >>> 16, num >>> 8, num);
         } else if (num >= -18446744073709552000) {
           let h = num / (2 ** 32), l = num % (2 ** 32);
           this.write(0xd3, h >>> 24, h >>> 16, h >>> 8, h, l >>> 24, l >>> 16, l >>> 8, l);
@@ -152,6 +152,12 @@ class CoreDecode {
     if (byte >= 0xa0 && byte <= 0xbf) {
       const length = byte - 0xa0;
       return String.fromCharCode(...this.readBytes(length));
+    } else if (byte == 0xd9) {
+      return String.fromCharCode(...this.readBytes(this.readByte()));
+    } else if (byte == 0xda) {
+      return String.fromCharCode(...this.readBytes(this.readByte() << 8 | this.readByte()));
+    } else if (byte == 0xdb) {
+      return String.fromCharCode(...this.readBytes(this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte()));
     } else if (byte >= 0x90 && byte <= 0x9f) {
       const length = byte - 0x90;
       const array = [];
@@ -159,8 +165,40 @@ class CoreDecode {
         array.push(this.decode());
       }
       return array;
+    } else if (byte == 0xdc) {
+      const length = this.readByte() << 8 | this.readByte();
+      const array = [];
+      for (let i = 0; i < length; i++) {
+        array.push(this.decode());
+      }
+      return array;
+    } else if (byte == 0xdd) {
+      const length = this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte();
+      const array = [];
+      for (let i = 0; i < length; i++) {
+        array.push(this.decode());
+      }
+      return array;
     } else if (byte >= 0x80 && byte <= 0x8f) {
       const length = byte - 0x80;
+      const map = {};
+      for (let i = 0; i < length; i++) {
+        const key = this.decode();
+        const value = this.decode();
+        map[key] = value;
+      }
+      return map;
+    } else if (byte == 0xde) {
+      const length = this.readByte() << 8 | this.readByte();
+      const map = {};
+      for (let i = 0; i < length; i++) {
+        const key = this.decode();
+        const value = this.decode();
+        map[key] = value;
+      }
+      return map;
+    } else if (byte == 0xdf) {
+      const length = this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte();
       const map = {};
       for (let i = 0; i < length; i++) {
         const key = this.decode();
@@ -224,4 +262,3 @@ const msgpack = {
   _encode: encoder.encode.bind(encoder),
   _decode: decoder.decode.bind(decoder)
 };
-            
