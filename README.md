@@ -6,6 +6,31 @@ Prone to most common packets used for lagging or crashing servers that use msgpa
 
 Try it at https://0xffabc.github.io/MsgpackP/msgpackp-example.html
 
+# Installation 
+
+Head over to https://0xffabc.github.io/MsgpackP/codec.js to see a build of this script. Copypaste it in your website and modify it as in next patches for your needs;
+
+## Browser usage
+
+```patch
+- let msgpack = {
++ window.msgpack = {
+```
+
+## Require.js usage
+
+```patch
+- let msgpack = {
++ module.exports = {
+```
+
+## ES6 Module usage
+
+```patch
+
++ export default msgpack
+```
+
 # Documentation 
 
 ## _encode(data: any[] | any except function) -> Uint8Array
