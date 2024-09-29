@@ -158,52 +158,20 @@ class CoreDecode {
       return String.fromCharCode(...this.readBytes(this.readByte() << 8 | this.readByte()));
     } else if (byte == 0xdb) {
       return String.fromCharCode(...this.readBytes(this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte()));
-    } else if (byte >= 0x90 && byte <= 0x9f) {
-      const length = byte - 0x90;
+    } else if ((byte >= 0x90 && byte <= 0x9f) || byte == 0xdc || byte == 0xdd) {
+      const length = byte == 0xdc ? (this.readByte() << 8 | this.readByte()) : byte == 0xdd ? (this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte()) : byte - 0x90;
       const array = [];
       for (let i = 0; i < length; i++) {
         array.push(this.decode());
       }
       return array;
-    } else if (byte == 0xdc) {
-      const length = this.readByte() << 8 | this.readByte();
-      const array = [];
-      for (let i = 0; i < length; i++) {
-        array.push(this.decode());
-      }
-      return array;
-    } else if (byte == 0xdd) {
-      const length = this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte();
-      const array = [];
-      for (let i = 0; i < length; i++) {
-        array.push(this.decode());
-      }
-      return array;
-    } else if (byte >= 0x80 && byte <= 0x8f) {
-      const length = byte - 0x80;
+    } else if ((byte >= 0x80 && byte <= 0x8f) || byte == 0xde || byte == 0xdf) {
+      const length = byte == 0xde ? (this.readByte() << 8 | this.readByte()) : byte == 0xdf ? (this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte()) : byte - 0x80;
       const map = {};
       for (let i = 0; i < length; i++) {
         const key = this.decode();
         const value = this.decode();
-        map[key] = value;
-      }
-      return map;
-    } else if (byte == 0xde) {
-      const length = this.readByte() << 8 | this.readByte();
-      const map = {};
-      for (let i = 0; i < length; i++) {
-        const key = this.decode();
-        const value = this.decode();
-        map[key] = value;
-      }
-      return map;
-    } else if (byte == 0xdf) {
-      const length = this.readByte() >>> 24 | this.readByte() >>> 16 | this.readByte() >>> 8 | this.readByte();
-      const map = {};
-      for (let i = 0; i < length; i++) {
-        const key = this.decode();
-        const value = this.decode();
-        map[key] = value;
+        map[key == "__proto__" ? Symbol("__proto__") : key] = value;
       }
       return map;
     } else if (byte > 0 && byte < 0x7f) {
