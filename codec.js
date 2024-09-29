@@ -1,24 +1,8 @@
 class CoreEncode {
   buffer = [];
   
-  byteSeq(base, bytes) {
-    this.write(base + bytes.length,
-                    ...bytes);
-    return this;
-  }
-  
   write(...bytes) {
     this.buffer.push(...bytes);
-  }
-  
-  boolean(type) {
-    this.write(type ? 0xC3 : 0xC2);
-    return this;
-  }
-  
-  nil() {
-    this.write(0xc0);
-    return this;
   }
   
   start_arr(len) {
@@ -36,7 +20,7 @@ class CoreEncode {
   fixstr(str) {
     const strenc = new TextEncoder("utf8").encode(str);
     if (strenc.byteLength <= 31) {
-      return this.byteSeq(0xa0, strenc);
+      return this.write(0xa0 + strenc.byteLength, ...strenc);
     } else if (strenc.byteLength < (2 ** 8) - 1) {
       this.write(0xd9, strenc.byteLength, ...strenc);
     } else if (strenc.byteLength < (2 ** 16) - 1) {
@@ -117,8 +101,8 @@ class CoreEncode {
       }
     } else if (typeof data == "string") this.fixstr(data);
     else if (typeof data == "number") this.add_num(data);
-    else if (typeof data == "boolean") this.boolean(data);
-    else if (typeof data == "undefined" || isNaN(data) || data == null) this.nil();
+    else if (typeof data == "boolean") this.boolean(data ? 0xC3 : 0xC2);
+    else if (typeof data == "undefined" || isNaN(data) || data == null) this.write(0xc0);
     else throw new TypeError("Unknown type: " + typeof data);
     
     return new Uint8Array(this.buffer);
