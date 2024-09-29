@@ -1,8 +1,8 @@
 # msgpackp
 
-Fast msgpack implementation written in javascript and made specifically for moomoo
+Fast msgpack implementation written in javascript and made specifically for moomoo.
 
-Prone to most common packets used for lagging or crashing servers that use msgpack-lite
+Prone to most common packets used for lagging or crashing servers that use msgpack-lite.
 
 # Documentation 
 
@@ -26,7 +26,7 @@ socket.on("message", ({ data }) => {
 ```
 
 ## async pack(data: any[] | any except function) -> Uint8Array 
-Packs the data with msgpack format. Recommended for most of cases, since it's easier to control exceptions that happen while packing data
+Packs the data with msgpack format. Recommended for most of cases, since it's easier to control exceptions that happen while packing data.
 
 ```js
 const socket = new WebSocketStream("wss://127.0.0.1");
