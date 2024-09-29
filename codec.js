@@ -82,11 +82,8 @@ class CoreEncode {
         } else if (num < 4294967296) {
           this.write(0xce, num >>> 24, num >>> 16, num >>> 8, num);
         } else if (num <= 18446744073709552000) {
-          const buffer = new ArrayBuffer(8);
-          const view = new DataView(buffer);
-          view.setBigInt64(0, BigInt(num));
-          
-          this.write(0xcf, ...new Uint8Array(view.buffer));
+          let h = num / (2 ** 32), l = num % (2 ** 32);
+          this.write(0xcf, h >>> 24, h >>> 16, h >>> 8, h, l >>> 24, l >>> 16, l >>> 8, l);
         } else this.write(0xcf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
       } else {
       if (num > -128) {
@@ -96,11 +93,8 @@ class CoreEncode {
       } else if (num > -4294967296) {
           this.write(0xd2, num >>> 24, num >>> 16, num >>> 8, data);
         } else if (num >= -18446744073709552000) {
-          const buffer = new ArrayBuffer(8);
-          const view = new DataView(buffer);
-          view.setBigInt64(0, BigInt(num));
-          
-          this.write(0xd3, ...new Uint8Array(view.buffer));
+          let h = num / (2 ** 32), l = num % (2 ** 32);
+          this.write(0xd3, h >>> 24, h >>> 16, h >>> 8, h, l >>> 24, l >>> 16, l >>> 8, l);
         } else this.write(0xd3, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
     }
     
@@ -179,35 +173,21 @@ class CoreDecode {
     } else if (byte == 0xcc) {
       return byte;
     } else if (byte == 0xcd) {
-      const res = this.view.getUint16(this.offset);
-      this.skip(2);
-      return res;
+      return this.readByte() << 8 | this.readByte();
     } else if (byte == 0xce) {
-      const res = this.view.getUint32(this.offset);
-      this.skip(4);
-      return res;
+      return this.readByte() << 24 | this.readByte() << 16 | this.readByte() << 8 | this.readByte();
     } else if (byte == 0xcf) {
-      const res = this.view.getBigInt64(this.offset);
-      this.skip(8);
-      return Number(res);
+      return 0n | BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64;
     } else if (byte > 0xe0 && byte < 0xff) {
       return -(0xe0 + byte);
     } else if (byte == 0xd0) {
-      const res = -this.readByte();
-      //this.skip(1);
-      return res;
+      return -this.readByte();
     } else if (byte == 0xd1) {
-      const res = this.view.getInt16(this.offset);
-      this.skip(2);
-      return res;
+      return -(this.readByte() << 8 | this.readByte());
     } else if (byte == 0xd2) {
-      const res = this.view.getInt32(this.offset);
-      this.skip(4);
-      return res;
+      return -(this.readByte() << 24 | this.readByte() << 16 | this.readByte() << 8 | this.readByte());
     } else if (byte == 0xd3) {
-      const res = this.view.getBigInt64(this.offset);
-      this.skip(8);
-      return Number(res);
+      return (0n | BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64) * (-1n);
     } else if (byte == 0xcb) {
       const res = this.view.getFloat64(this.offset);
       this.skip(8);
@@ -235,7 +215,7 @@ const msgpack = {
   unpack(buffer) {
     return new Promise((accept, reject) => {
       try {
-        accept(this._decode(data));
+        accept(this._decode(buffer));
       } catch(e) {
         reject(e);
       }
@@ -244,3 +224,4 @@ const msgpack = {
   _encode: encoder.encode.bind(encoder),
   _decode: decoder.decode.bind(decoder)
 };
+            
