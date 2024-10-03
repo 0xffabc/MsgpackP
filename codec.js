@@ -71,7 +71,7 @@ class CoreEncode {
         } else this.write(0xcf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
       } else {
       if (num > -128) {
-        this.write(num);
+        this.write(0xd0, num);
       } else if (num > -32768) {
         this.write(0xd1, num >>> 8, num);
       } else if (num > -4294967296) {
@@ -169,7 +169,7 @@ class CoreDecode {
     } else if (byte >= 0xe0 && byte <= 0xff) {
       return 0xff - byte - 1;
     } else if (byte == 0xd0) {
-      return -this.readByte();
+      return this.readByte() - 256;
     } else if (byte == 0xd1) {
       return -(this.readByte() << 8 | this.readByte());
     } else if (byte == 0xd2) {
