@@ -71,7 +71,7 @@ class CoreEncode {
         } else this.write(0xcf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
       } else {
       if (num > -128) {
-        this.write(0xd0, num);
+        this.write(num);
       } else if (num > -32768) {
         this.write(0xd1, num >>> 8, num);
       } else if (num > -4294967296) {
@@ -165,9 +165,9 @@ class CoreDecode {
     } else if (byte == 0xce) {
       return this.readByte() << 24 | this.readByte() << 16 | this.readByte() << 8 | this.readByte();
     } else if (byte == 0xcf) {
-      return 0n | BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64n;
-    } else if (byte > 0xe0 && byte < 0xff) {
-      return -(0xe0 + byte);
+      return BigInt(this.readByte()) << 8n | BigInt(this.readByte()) << 16n | BigInt(this.readByte()) << 24n | BigInt(this.readByte()) << 32n | BigInt(this.readByte()) << 40n | BigInt(this.readByte()) << 48n | BigInt(this.readByte()) << 56n | BigInt(this.readByte()) << 64n;
+    } else if (byte >= 0xe0 && byte <= 0xff) {
+      return 0xff - byte - 1;
     } else if (byte == 0xd0) {
       return -this.readByte();
     } else if (byte == 0xd1) {
