@@ -20,14 +20,14 @@ class CoreEncode {
   
   fixstr(str) {
     const strenc = str.split("").map(_ => _.charCodeAt(0));
-    if (strenc.byteLength <= 31) {
-      return this.write(0xa0 + strenc.byteLength, ...strenc);
-    } else if (strenc.byteLength < (2 ** 8) - 1) {
-      this.write(0xd9, strenc.byteLength, ...strenc);
-    } else if (strenc.byteLength < (2 ** 16) - 1) {
-      this.write(0xda, strenc.byteLength >>> 8, strenc.byteLength, ...strenc);
-    } else if (strenc.byteLength < (2 ** 32) - 1) {
-      this.write(0xdb, strenc.byteLength >>> 24, strenc.byteLength >>> 16, strenc.byteLength >>> 8, strenc.byteLength, ...strenc);
+    if (strenc.length <= 31) {
+      return this.write(0xa0 + strenc.length, ...strenc);
+    } else if (strenc.length < (2 ** 8) - 1) {
+      this.write(0xd9, strenc.length, ...strenc);
+    } else if (strenc.length < (2 ** 16) - 1) {
+      this.write(0xda, strenc.length >>> 8, strenc.length, ...strenc);
+    } else if (strenc.length < (2 ** 32) - 1) {
+      this.write(0xdb, strenc.length >>> 24, strenc.length >>> 16, strenc.length >>> 8, strenc.length, ...strenc);
     }
     
     return this;
