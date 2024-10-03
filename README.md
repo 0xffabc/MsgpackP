@@ -4,11 +4,11 @@ Fast msgpack implementation written in javascript and made specifically for moom
 
 Prone to most common packets used for lagging or crashing servers that use msgpack-lite.
 
-Try it at https://0xffabc.github.io/MsgpackP/msgpackp-example.html
+Try it at [https://0xffabc.github.io/MsgpackP/msgpackp-example.html](https://0xffabc.github.io/MsgpackP/msgpackp-example.html)
 
 # Installation 
 
-Head over to https://0xffabc.github.io/MsgpackP/codec.js to see a build of this script. Copypaste it in your website and modify it as in next patches for your needs;
+Head over to [https://0xffabc.github.io/MsgpackP/codec.js](https://0xffabc.github.io/MsgpackP/codec.js) to see a build of this script. Copypaste it in your website and modify it as in next patches for your needs;
 
 ## Browser usage
 
