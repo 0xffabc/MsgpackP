@@ -39,7 +39,7 @@ class CoreEncode {
     } else if (length < 15)
       this.write(0x80 + length);
     else {
-      this.write(0xdf, num >>> 24, num >>> 16, num >>> 8, data);
+      this.write(0xdf, length >>> 24, length >>> 16, length >>> 8, length);
     }
     
     return this;
