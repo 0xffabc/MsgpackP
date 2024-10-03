@@ -1,5 +1,6 @@
 class CoreEncode {
   buffer = [];
+  view = new DataView(new ArrayBuffer(8));
   
   write(...bytes) {
     this.buffer.push(...bytes);
@@ -18,7 +19,7 @@ class CoreEncode {
   }
   
   fixstr(str) {
-    const strenc = new TextEncoder("utf8").encode(str);
+    const strenc = str.split("").map(_ => _.charCodeAt(0));
     if (strenc.byteLength <= 31) {
       return this.write(0xa0 + strenc.byteLength, ...strenc);
     } else if (strenc.byteLength < (2 ** 8) - 1) {
@@ -47,11 +48,9 @@ class CoreEncode {
   add_num(num) {
     num = Number(num);
     if (!Number.isInteger(num)) {
-      const buffer = new ArrayBuffer(8);
-      const view = new DataView(buffer);
-      view.setFloat64(0, num);
+      this.view.setFloat64(0, num);
         
-      this.write(0xcb, ...new Uint8Array(view.buffer));
+      this.write(0xcb, ...new Uint8Array(this.view.buffer));
       
       return this;
     }
@@ -90,21 +89,19 @@ class CoreEncode {
     if (!noReset) this.buffer.length = 0;
     if (data?.constructor?.name == "Array") {
       this.start_arr(data.length);
-      data.forEach(_ => this.encode(_, true));
+      for (let i = 0; i < data.length; i++) this.encode(data[i], true);
     } else if (typeof data == "object" && !!data) {
       const keys = Object.keys(data);
-      const vals = Object.values(data);
       this.map(keys.length);
       
       for (let i = 0; i < keys.length; i++) {
         this.encode(keys[i], true);
-        this.encode(vals[i], true);
+        this.encode(data[keys[i]], true);
       }
     } else if (typeof data == "string") this.fixstr(data);
     else if (typeof data == "number" || typeof data == "bigint") this.add_num(data);
     else if (typeof data == "boolean") this.write(data ? 0xC3 : 0xC2);
     else if (typeof data == "undefined" || isNaN(data) || data == null) this.write(0xc0);
-    else throw new TypeError("Unknown type: " + typeof data);
     
     return new Uint8Array(this.buffer);
   }
