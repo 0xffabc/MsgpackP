@@ -28,7 +28,7 @@ unpack.onchange = () => {
     const parsed = JSON.parse(unpack.value);
     const timestamp = performance.now();
       
-    pack.value = msgpack._encode(parsed);
+    pack.value = "[" + msgpack._encode(parsed).toString() + "]";
     time.innerHTML = `Operation done in ${performance.now() - timestamp}ms`;
   } catch(e) {
     pack.value = e;
