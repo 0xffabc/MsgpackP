@@ -7,7 +7,7 @@ class CoreEncode {
   }
   
   start_arr(len) {
-    if (len > 15 && len < (2 ** 16) - 1) {
+    if (len > 15 && len < 65535) {
       this.write(0xdc, len >>> 8, len);
     } else if (len < 15)
       this.write(0x90 + len);
@@ -22,11 +22,11 @@ class CoreEncode {
     const strenc = str.split("").map(_ => _.charCodeAt(0));
     if (strenc.length <= 31) {
       return this.write(0xa0 + strenc.length, ...strenc);
-    } else if (strenc.length < (2 ** 8) - 1) {
+    } else if (strenc.length < 255) {
       this.write(0xd9, strenc.length, ...strenc);
-    } else if (strenc.length < (2 ** 16) - 1) {
+    } else if (strenc.length < 65535) {
       this.write(0xda, strenc.length >>> 8, strenc.length, ...strenc);
-    } else if (strenc.length < (2 ** 32) - 1) {
+    } else if (strenc.length < 4294967295) {
       this.write(0xdb, strenc.length >>> 24, strenc.length >>> 16, strenc.length >>> 8, strenc.length, ...strenc);
     }
     
@@ -34,7 +34,7 @@ class CoreEncode {
   }
   
   map(length) {
-    if (length > 15 && length < (2 ** 16) - 1) {
+    if (length > 15 && length < 65535) {
       this.write(0xde, length >>> 8, length);
     } else if (length < 15)
       this.write(0x80 + length);
@@ -46,7 +46,7 @@ class CoreEncode {
   }
   
   add_num(num) {
-    num = Number(num);
+    if (typeof num == "bigint") num = Number(num);
     if (!Number.isInteger(num)) {
       this.view.setFloat64(0, num);
         
@@ -66,7 +66,7 @@ class CoreEncode {
         } else if (num < 4294967296) {
           this.write(0xce, num >>> 24, num >>> 16, num >>> 8, num);
         } else if (num <= 18446744073709552000) {
-          let h = num / (2 ** 32), l = num % (2 ** 32);
+          let h = num / 4294967296, l = num % 4294967296;
           this.write(0xcf, h >>> 24, h >>> 16, h >>> 8, h, l >>> 24, l >>> 16, l >>> 8, l);
         } else this.write(0xcf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
       } else {
@@ -77,7 +77,7 @@ class CoreEncode {
       } else if (num > -4294967296) {
           this.write(0xd2, num >>> 24, num >>> 16, num >>> 8, num);
         } else if (num >= -18446744073709552000) {
-          let h = num / (2 ** 32), l = num % (2 ** 32);
+          let h = num / 4294967296, l = num % 4294967296;
           this.write(0xd3, h >>> 24, h >>> 16, h >>> 8, h, l >>> 24, l >>> 16, l >>> 8, l);
         } else this.write(0xd3, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
     }
@@ -153,13 +153,13 @@ class CoreDecode {
       for (let i = 0; i < length; i++) {
         const key = this.decode();
         const value = this.decode();
-        map[key == "__proto__" ? Symbol("__proto__") : key] = value;
+        if (key != "__proto__") map[key] = value;
       }
       return map;
     } else if (byte > 0 && byte < 0x7f) {
       return byte;
     } else if (byte == 0xcc) {
-      return byte;
+      return this.readByte();
     } else if (byte == 0xcd) {
       return this.readByte() << 8 | this.readByte();
     } else if (byte == 0xce) {
