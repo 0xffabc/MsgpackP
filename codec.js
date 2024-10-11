@@ -103,7 +103,7 @@ class CoreEncode {
     else if (typeof data == "boolean") this.write(data ? 0xC3 : 0xC2);
     else if (typeof data == "undefined" || isNaN(data) || data == null) this.write(0xc0);
     
-    return new Uint8Array(this.buffer);
+    return this.buffer;
   }
 }
 
