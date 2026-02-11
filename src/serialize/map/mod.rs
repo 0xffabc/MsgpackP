@@ -2,7 +2,7 @@ use std::io::Write;
 
 use anyhow::Result;
 
-use crate::serialize::{WriteTo, value::Value};
+use crate::{serialize::WriteTo, value::Value};
 
 struct Map();
 

@@ -11,8 +11,6 @@ pub mod map;
 pub mod null;
 pub mod string;
 
-pub mod value;
-
 pub trait WriteTo {
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()>;
 }
@@ -20,7 +18,7 @@ pub trait WriteTo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::serialize::value::Value;
+    use crate::value::Value;
 
     #[test]
     fn test_write_to() {
