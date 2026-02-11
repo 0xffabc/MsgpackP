@@ -5,7 +5,7 @@ use std::io::Write;
 
 impl WriteTo for String {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         let len = self.len();
 
         if len <= 31 {

@@ -5,7 +5,7 @@ use std::io::Write;
 
 impl WriteTo for [u8; 1] {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         writer.write_all(&[Families::FIXEXT1])?;
         writer.write_all(self)?;
 
@@ -15,7 +15,7 @@ impl WriteTo for [u8; 1] {
 
 impl WriteTo for [u8; 2] {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         writer.write_all(&[Families::FIXEXT2])?;
         writer.write_all(self)?;
 
@@ -25,7 +25,7 @@ impl WriteTo for [u8; 2] {
 
 impl WriteTo for [u8; 4] {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         writer.write_all(&[Families::FIXEXT4])?;
         writer.write_all(self)?;
 
@@ -35,7 +35,7 @@ impl WriteTo for [u8; 4] {
 
 impl WriteTo for [u8; 8] {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         writer.write_all(&[Families::FIXEXT8])?;
         writer.write_all(self)?;
 
@@ -45,7 +45,7 @@ impl WriteTo for [u8; 8] {
 
 impl WriteTo for [u8; 16] {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         writer.write_all(&[Families::FIXEXT16])?;
         writer.write_all(self)?;
 
@@ -60,7 +60,7 @@ pub struct Extension {
 
 impl WriteTo for Extension {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         let data_len = self.data.len();
 
         match data_len {

@@ -5,7 +5,7 @@ use std::io::Write;
 
 impl WriteTo for f32 {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         let bytes = self.to_be_bytes();
         writer.write_all(&[Families::FLOAT32, bytes[0], bytes[1], bytes[2], bytes[3]])?;
 
@@ -15,7 +15,7 @@ impl WriteTo for f32 {
 
 impl WriteTo for f64 {
     #[inline(always)]
-    fn write_to<T, U: Write>(&self, writer: &mut U) -> Result<()> {
+    fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
         let bytes = self.to_be_bytes();
         writer.write_all(&[
             Families::FLOAT64,
