@@ -1,0 +1,17 @@
+{
+  "name": "msgpackp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "dev": "rsbuild dev --open",
+    "format": "prettier --write .",
+    "preview": "rsbuild preview"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^1.6.12",
+    "prettier": "^3.7.3",
+    "typescript": "^5.9.3"
+  }
+}
