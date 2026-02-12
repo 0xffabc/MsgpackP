@@ -1,13 +1,13 @@
 use std::io::{Cursor, Read, Write};
 
-use anyhow::Result;
-
 use crate::{
     constants::Families,
     serialize::{ReadFrom, WriteTo, array::Array, ext::Extension},
 };
+use anyhow::Result;
+use ordered_float::OrderedFloat;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Value {
     Nil,
     Bool(bool),
@@ -15,8 +15,8 @@ pub enum Value {
     U16(u16),
     U32(u32),
     U64(u64),
-    F32(f32),
-    F64(f64),
+    F32(OrderedFloat<f32>),
+    F64(OrderedFloat<f64>),
     I8(i8),
     I16(i16),
     I32(i32),
@@ -54,8 +54,8 @@ pub fn read_value_from_cursor(reader: &mut Cursor<Vec<u8>>) -> Value {
         | Families::EXT8
         | Families::EXT16
         | Families::EXT32 => Value::Extension(Extension::read_from(packet_type, reader)),
-        Families::FLOAT32 => Value::F32(f32::read_from(packet_type, reader)),
-        Families::FLOAT64 => Value::F64(f64::read_from(packet_type, reader)),
+        Families::FLOAT32 => Value::F32(OrderedFloat(f32::read_from(packet_type, reader))),
+        Families::FLOAT64 => Value::F64(OrderedFloat(f64::read_from(packet_type, reader))),
         Families::UINT8 => Value::U8(u8::read_from(packet_type, reader)),
         Families::UINT16 => Value::U16(u16::read_from(packet_type, reader)),
         Families::UINT32 => Value::U32(u32::read_from(packet_type, reader)),
@@ -75,7 +75,13 @@ pub fn read_value_from_cursor(reader: &mut Cursor<Vec<u8>>) -> Value {
         }
         0x00..0x7f => Value::U8(u8::read_from(packet_type, reader)),
         0xe0..=0xff => Value::I8(i8::read_from(packet_type, reader)),
-        _ => Value::Nil,
+        _ if (Families::FIXMAP_TYPE..=(Families::FIXMAP_TYPE + 0x0f)).contains(&packet_type) => {
+            Value::Map(Vec::<(Value, Value)>::read_from(packet_type, reader))
+        }
+        Families::MAP16 | Families::MAP32 => {
+            Value::Map(Vec::<(Value, Value)>::read_from(packet_type, reader))
+        }
+        127..=191 => Value::Nil,
     }
 }
 
@@ -91,12 +97,22 @@ macro_rules! typed_to_value {
     };
 }
 
+impl From<f32> for Value {
+    fn from(value: f32) -> Self {
+        Value::F32(OrderedFloat(value))
+    }
+}
+
+impl From<f64> for Value {
+    fn from(value: f64) -> Self {
+        Value::F64(OrderedFloat(value))
+    }
+}
+
 typed_to_value!(u8, U8);
 typed_to_value!(u16, U16);
 typed_to_value!(u32, U32);
 typed_to_value!(u64, U64);
-typed_to_value!(f32, F32);
-typed_to_value!(f64, F64);
 typed_to_value!(i8, I8);
 typed_to_value!(i16, I16);
 typed_to_value!(i32, I32);

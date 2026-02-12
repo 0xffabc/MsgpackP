@@ -1,6 +1,9 @@
 pub(crate) struct Families;
 
 impl Families {
+    pub const FIXMAP_TYPE: u8 = 0x80;
+    pub const MAP16: u8 = 0xde;
+    pub const MAP32: u8 = 0xdf;
     pub const FIXSTR: u8 = 0xa0;
     pub const NIL: u8 = 0xc0;
     pub const RESERVED: u8 = 0xc1;

@@ -96,7 +96,7 @@ impl ReadFrom for [u8; 16] {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Extension {
     type_: u8,
     data: Vec<u8>,
