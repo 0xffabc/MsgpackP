@@ -1,7 +1,7 @@
 use crate::constants::Families;
-use crate::serialize::WriteTo;
+use crate::serialize::{ReadFrom, WriteTo};
 use anyhow::Result;
-use std::io::Write;
+use std::io::{Cursor, Write};
 
 impl<O> WriteTo for Option<O> {
     #[inline(always)]
@@ -12,5 +12,15 @@ impl<O> WriteTo for Option<O> {
         }
 
         Ok(())
+    }
+}
+
+impl ReadFrom for Option<()> {
+    #[inline(always)]
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Self {
+        match packet_type {
+            Families::NIL => None,
+            _ => Some(()),
+        }
     }
 }

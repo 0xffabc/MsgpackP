@@ -1,7 +1,7 @@
 use crate::constants::Families;
-use crate::serialize::WriteTo;
+use crate::serialize::{ReadFrom, WriteTo};
 use anyhow::Result;
-use std::io::Write;
+use std::io::{Cursor, Write};
 
 impl WriteTo for bool {
     #[inline(always)]
@@ -15,5 +15,12 @@ impl WriteTo for bool {
         writer.write_all(&[byte])?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for bool {
+    #[inline(always)]
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Self {
+        packet_type == Families::TRUE
     }
 }

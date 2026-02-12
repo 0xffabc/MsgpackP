@@ -1,7 +1,7 @@
 use crate::constants::Families;
-use crate::serialize::WriteTo;
+use crate::serialize::{ReadFrom, WriteTo};
 use anyhow::Result;
-use std::io::Write;
+use std::io::{Cursor, Read, Write};
 
 impl WriteTo for f32 {
     #[inline(always)]
@@ -10,6 +10,17 @@ impl WriteTo for f32 {
         writer.write_all(&[Families::FLOAT32, bytes[0], bytes[1], bytes[2], bytes[3]])?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for f32 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 4];
+
+        reader.read_exact(&mut bytes).unwrap_or(());
+
+        f32::from_be_bytes(bytes)
     }
 }
 
@@ -30,5 +41,16 @@ impl WriteTo for f64 {
         ])?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for f64 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 8];
+
+        reader.read_exact(&mut bytes).unwrap_or(());
+
+        f64::from_be_bytes(bytes)
     }
 }

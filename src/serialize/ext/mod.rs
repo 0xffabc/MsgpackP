@@ -1,7 +1,7 @@
 use crate::constants::Families;
-use crate::serialize::WriteTo;
+use crate::serialize::{ReadFrom, WriteTo};
 use anyhow::Result;
-use std::io::Write;
+use std::io::{Cursor, Read, Write};
 
 impl WriteTo for [u8; 1] {
     #[inline(always)]
@@ -10,6 +10,13 @@ impl WriteTo for [u8; 1] {
         writer.write_all(self)?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for [u8; 1] {
+    #[inline(always)]
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Self {
+        [packet_type]
     }
 }
 
@@ -23,6 +30,15 @@ impl WriteTo for [u8; 2] {
     }
 }
 
+impl ReadFrom for [u8; 2] {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 2];
+        reader.read_exact(&mut bytes).unwrap_or(());
+        bytes
+    }
+}
+
 impl WriteTo for [u8; 4] {
     #[inline(always)]
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
@@ -30,6 +46,15 @@ impl WriteTo for [u8; 4] {
         writer.write_all(self)?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for [u8; 4] {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 4];
+        reader.read_exact(&mut bytes).unwrap_or(());
+        bytes
     }
 }
 
@@ -43,6 +68,15 @@ impl WriteTo for [u8; 8] {
     }
 }
 
+impl ReadFrom for [u8; 8] {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 8];
+        reader.read_exact(&mut bytes).unwrap_or(());
+        bytes
+    }
+}
+
 impl WriteTo for [u8; 16] {
     #[inline(always)]
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
@@ -53,6 +87,16 @@ impl WriteTo for [u8; 16] {
     }
 }
 
+impl ReadFrom for [u8; 16] {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 16];
+        reader.read_exact(&mut bytes).unwrap_or(());
+        bytes
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Extension {
     type_: u8,
     data: Vec<u8>,
@@ -81,5 +125,25 @@ impl WriteTo for Extension {
         writer.write_all(&self.data)?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for Extension {
+    #[inline(always)]
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut data_len_buffer = [0u8; 4];
+
+        reader.read_exact(&mut data_len_buffer).unwrap_or(());
+
+        let data_len = u32::from_be_bytes(data_len_buffer) as usize;
+
+        let mut data = vec![0u8; data_len];
+
+        reader.read_exact(&mut data).unwrap_or(());
+
+        Extension {
+            type_: packet_type,
+            data,
+        }
     }
 }

@@ -1,7 +1,7 @@
 use crate::constants::Families;
-use crate::serialize::WriteTo;
+use crate::serialize::{ReadFrom, WriteTo};
 use anyhow::Result;
-use std::io::Write;
+use std::io::{Cursor, Read, Write};
 
 impl WriteTo for u8 {
     #[inline(always)]
@@ -15,6 +15,13 @@ impl WriteTo for u8 {
     }
 }
 
+impl ReadFrom for u8 {
+    #[inline(always)]
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Self {
+        packet_type
+    }
+}
+
 impl WriteTo for u16 {
     #[inline(always)]
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
@@ -25,6 +32,17 @@ impl WriteTo for u16 {
     }
 }
 
+impl ReadFrom for u16 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut byte = [0u8; 2];
+
+        reader.read_exact(&mut byte).unwrap_or(());
+
+        u16::from_be_bytes(byte)
+    }
+}
+
 impl WriteTo for u32 {
     #[inline(always)]
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
@@ -32,6 +50,17 @@ impl WriteTo for u32 {
         writer.write_all(&[Families::UINT32, bytes[0], bytes[1], bytes[2], bytes[3]])?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for u32 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut byte = [0u8; 4];
+
+        reader.read_exact(&mut byte).unwrap_or(());
+
+        u32::from_be_bytes(byte)
     }
 }
 
@@ -55,6 +84,17 @@ impl WriteTo for u64 {
     }
 }
 
+impl ReadFrom for u64 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut byte = [0u8; 8];
+
+        reader.read_exact(&mut byte).unwrap_or(());
+
+        u64::from_be_bytes(byte)
+    }
+}
+
 impl WriteTo for i8 {
     #[inline(always)]
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
@@ -62,12 +102,27 @@ impl WriteTo for i8 {
             -32..=-1 => {
                 let positive: u8 = u8::try_from(-self)?;
 
-                writer.write_all(&[positive])?;
+                writer.write_all(&[0xe0 + positive])?;
             }
             _ => writer.write_all(&[Families::INT8, *self as u8])?,
         }
 
         Ok(())
+    }
+}
+
+impl ReadFrom for i8 {
+    #[inline(always)]
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        if packet_type >= 0xe0 {
+            return -((!packet_type as i8).wrapping_add(1));
+        }
+
+        let mut byte = [0u8; 1];
+
+        reader.read_exact(&mut byte).unwrap_or(());
+
+        i8::from_be_bytes(byte)
     }
 }
 
@@ -81,6 +136,17 @@ impl WriteTo for i16 {
     }
 }
 
+impl ReadFrom for i16 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 2];
+
+        reader.read_exact(&mut bytes).unwrap_or(());
+
+        i16::from_be_bytes(bytes)
+    }
+}
+
 impl WriteTo for i32 {
     #[inline(always)]
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
@@ -88,6 +154,17 @@ impl WriteTo for i32 {
         writer.write_all(&[Families::INT32, bytes[0], bytes[1], bytes[2], bytes[3]])?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for i32 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 4];
+
+        reader.read_exact(&mut bytes).unwrap_or(());
+
+        i32::from_be_bytes(bytes)
     }
 }
 
@@ -108,5 +185,16 @@ impl WriteTo for i64 {
         ])?;
 
         Ok(())
+    }
+}
+
+impl ReadFrom for i64 {
+    #[inline(always)]
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+        let mut bytes = [0u8; 8];
+
+        reader.read_exact(&mut bytes).unwrap_or(());
+
+        i64::from_be_bytes(bytes)
     }
 }

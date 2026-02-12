@@ -3,6 +3,7 @@ pub(crate) struct Families;
 impl Families {
     pub const FIXSTR: u8 = 0xa0;
     pub const NIL: u8 = 0xc0;
+    pub const RESERVED: u8 = 0xc1;
     pub const FALSE: u8 = 0xc2;
     pub const TRUE: u8 = 0xc3;
     pub const BIN8: u8 = 0xc4;
