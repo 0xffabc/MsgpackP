@@ -24,7 +24,8 @@ pub trait ReadFrom {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::value::{Value, read_value_from_cursor};
+    use crate::reader::read_value_from_cursor;
+    use crate::value::Value;
     use ordered_float::OrderedFloat;
 
     #[test]

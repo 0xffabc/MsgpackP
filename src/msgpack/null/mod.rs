@@ -1,5 +1,5 @@
 use crate::constants::Families;
-use crate::serialize::{ReadFrom, WriteTo};
+use crate::msgpack::{ReadFrom, WriteTo};
 use anyhow::Result;
 use std::io::{Cursor, Write};
 
