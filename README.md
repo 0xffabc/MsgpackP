@@ -1,36 +1,51 @@
-# Rsbuild project
+# Currently undergoing major changes
 
-## Setup
+> [!WARN]
+> MsgpackP is no longer a simple .js script, however the .js version will remain in the repository root as a relic of the time
 
-Install the dependencies:
+# Building
 
-```bash
-npm install
+```
+cargo build
 ```
 
-## Get started
+# Public APIs
 
-Start the dev server, and the app will be available at [http://localhost:3000](http://localhost:3000).
+Serialize with
 
-```bash
-npm run dev
+```rust
+let mut buffer = Vec::new();
+
+let packet = vec![
+    Value::Str("sp".to_string()),
+    Value::Array(vec![Value::Map(vec![(
+        Value::Str("name".to_string()),
+        Value::Str("0xffabc".to_string()),
+    )])]),
+];
+
+packet.write_to(&mut buffer).unwrap();
 ```
 
-Build the app for production:
+Deserialize with
 
-```bash
-npm run build
+```rust
+let packet = vec![
+    146, 162, 99, 104, 147, 165, 72, 101, 108, 108, 111, 1, 203, 63, 244, 204, 204, 204,
+    204, 204, 205,
+];
+
+let val: Value = read_value_from_cursor(&mut Cursor::new(packet)).unwrap();
+
+assert_eq!(
+            val,
+            Value::Array(vec![
+                Value::Str("ch".to_string()),
+                Value::Array(vec![
+                    Value::Str("Hello".to_string()),
+                    Value::U8(1),
+                    Value::F64(OrderedFloat(1.3)),
+                ])
+            ])
+        );
 ```
-
-Preview the production build locally:
-
-```bash
-npm run preview
-```
-
-## Learn more
-
-To learn more about Rsbuild, check out the following resources:
-
-- [Rsbuild documentation](https://rsbuild.rs) - explore Rsbuild features and APIs.
-- [Rsbuild GitHub repository](https://github.com/web-infra-dev/rsbuild) - your feedback and contributions are welcome!
