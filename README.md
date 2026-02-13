@@ -1,6 +1,7 @@
 # Currently undergoing major changes
 
-> [!WARN]
+> [!WARNING]
+> 
 > MsgpackP is no longer a simple .js script, however the .js version will remain in the repository root as a relic of the time
 
 # Building
