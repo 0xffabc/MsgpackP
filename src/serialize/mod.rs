@@ -104,29 +104,20 @@ mod tests {
         assert_eq!(
             val,
             Value::Map(vec![
-                (Value::Str("int".to_string()), Value::U8(1)),
+                (Value::str("int"), Value::u8(1)),
+                (Value::str("float"), Value::f64(OrderedFloat(0.5))),
+                (Value::str("boolean"), Value::bool(true)),
+                (Value::str("null"), Value::Nil),
+                (Value::str("string"), Value::str("foo bar")),
                 (
-                    Value::Str("float".to_string()),
-                    Value::F64(OrderedFloat(0.5))
-                ),
-                (Value::Str("boolean".to_string()), Value::Bool(true)),
-                (Value::Str("null".to_string()), Value::Nil),
-                (
-                    Value::Str("string".to_string()),
-                    Value::Str("foo bar".to_string())
+                    Value::str("array"),
+                    Value::Array(vec![Value::str("foo"), Value::str("bar")])
                 ),
                 (
-                    Value::Str("array".to_string()),
-                    Value::Array(vec![
-                        Value::Str("foo".to_string()),
-                        Value::Str("bar".to_string())
-                    ])
-                ),
-                (
-                    Value::Str("object".to_string()),
+                    Value::str("object"),
                     Value::Map(vec![
-                        (Value::Str("foo".to_string()), Value::U8(1)),
-                        (Value::Str("baz".to_string()), Value::F64(OrderedFloat(0.5))),
+                        (Value::str("foo"), Value::u8(1)),
+                        (Value::str("baz"), Value::f64(OrderedFloat(0.5))),
                     ])
                 )
             ])

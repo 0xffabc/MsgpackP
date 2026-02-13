@@ -27,6 +27,89 @@ pub enum Value {
     Extension(Extension),
 }
 
+impl Value {
+    #[inline(always)]
+    pub fn nil() -> Self {
+        Value::Nil
+    }
+
+    #[inline(always)]
+    pub fn bool(value: bool) -> Self {
+        Value::Bool(value)
+    }
+
+    #[inline(always)]
+    pub fn u8(value: u8) -> Self {
+        Value::U8(value)
+    }
+
+    #[inline(always)]
+    pub fn u16(value: u16) -> Self {
+        Value::U16(value)
+    }
+
+    #[inline(always)]
+    pub fn u32(value: u32) -> Self {
+        Value::U32(value)
+    }
+
+    #[inline(always)]
+    pub fn u64(value: u64) -> Self {
+        Value::U64(value)
+    }
+
+    #[inline(always)]
+    pub fn f32(value: OrderedFloat<f32>) -> Self {
+        Value::F32(value)
+    }
+
+    #[inline(always)]
+    pub fn f64(value: OrderedFloat<f64>) -> Self {
+        Value::F64(value)
+    }
+
+    #[inline(always)]
+    pub fn i8(value: i8) -> Self {
+        Value::I8(value)
+    }
+
+    #[inline(always)]
+    pub fn i16(value: i16) -> Self {
+        Value::I16(value)
+    }
+
+    #[inline(always)]
+    pub fn i32(value: i32) -> Self {
+        Value::I32(value)
+    }
+
+    #[inline(always)]
+    pub fn i64(value: i64) -> Self {
+        Value::I64(value)
+    }
+
+    #[inline(always)]
+    pub fn str<T: Into<String>>(value: T) -> Self {
+        Value::Str(value.into())
+    }
+
+    #[inline(always)]
+    pub fn array<T: Into<Vec<Value>>>(value: T) -> Self {
+        Value::Array(value.into())
+    }
+
+    #[inline(always)]
+    pub fn map<T: Into<Vec<(Value, Value)>>>(value: T) -> Self {
+        Value::Map(value.into())
+    }
+
+    #[inline(always)]
+    pub fn extension(value: Extension) -> Self {
+        Value::Extension(value)
+    }
+}
+
+#[inline(always)]
 pub fn read_value_from_cursor(reader: &mut Cursor<Vec<u8>>) -> Result<Value> {
     let mut header = [0; 1];
 
@@ -98,12 +181,14 @@ macro_rules! typed_to_value {
 }
 
 impl From<f32> for Value {
+    #[inline(always)]
     fn from(value: f32) -> Self {
         Value::F32(OrderedFloat(value))
     }
 }
 
 impl From<f64> for Value {
+    #[inline(always)]
     fn from(value: f64) -> Self {
         Value::F64(OrderedFloat(value))
     }
