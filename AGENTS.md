@@ -407,3 +407,29 @@ And keep it that way for the time being.
 ### 💩 You need to have unnecessary code
 
 Don't delete the code your app doesn't use. At most, comment it.
+
+### 💩 No mention of AI generated commits
+
+_Good 👍🏻_
+
+```
+git commit -m "skibidi toilet"
+```
+
+_Bad 👎🏻_
+
+```
+git commit -m "[Feat] Add serde compatibility"
+```
+
+### 💩 Debug everything
+
+_Good 👍🏻_
+
+```javascript
+// Leave all console.logs in production.
+// The user deserves to see your debugging journey.
+console.log('dick', e);
+console.log('aaaa why is this undefined', data);
+console.log('fuck', error);
+```
