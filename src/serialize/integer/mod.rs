@@ -17,8 +17,8 @@ impl WriteTo for u8 {
 
 impl ReadFrom for u8 {
     #[inline(always)]
-    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Self {
-        packet_type
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+        Ok(packet_type)
     }
 }
 
@@ -34,12 +34,12 @@ impl WriteTo for u16 {
 
 impl ReadFrom for u16 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut byte = [0u8; 2];
 
-        reader.read_exact(&mut byte).unwrap_or(());
+        reader.read_exact(&mut byte)?;
 
-        u16::from_be_bytes(byte)
+        Ok(u16::from_be_bytes(byte))
     }
 }
 
@@ -55,12 +55,12 @@ impl WriteTo for u32 {
 
 impl ReadFrom for u32 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut byte = [0u8; 4];
 
-        reader.read_exact(&mut byte).unwrap_or(());
+        reader.read_exact(&mut byte)?;
 
-        u32::from_be_bytes(byte)
+        Ok(u32::from_be_bytes(byte))
     }
 }
 
@@ -86,12 +86,12 @@ impl WriteTo for u64 {
 
 impl ReadFrom for u64 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut byte = [0u8; 8];
 
-        reader.read_exact(&mut byte).unwrap_or(());
+        reader.read_exact(&mut byte)?;
 
-        u64::from_be_bytes(byte)
+        Ok(u64::from_be_bytes(byte))
     }
 }
 
@@ -113,16 +113,16 @@ impl WriteTo for i8 {
 
 impl ReadFrom for i8 {
     #[inline(always)]
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         if packet_type >= 0xe0 {
-            return -((!packet_type as i8).wrapping_add(1));
+            return Ok(-((!packet_type as i8).wrapping_add(1)));
         }
 
         let mut byte = [0u8; 1];
 
-        reader.read_exact(&mut byte).unwrap_or(());
+        reader.read_exact(&mut byte)?;
 
-        i8::from_be_bytes(byte)
+        Ok(i8::from_be_bytes(byte))
     }
 }
 
@@ -138,12 +138,12 @@ impl WriteTo for i16 {
 
 impl ReadFrom for i16 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut bytes = [0u8; 2];
 
-        reader.read_exact(&mut bytes).unwrap_or(());
+        reader.read_exact(&mut bytes)?;
 
-        i16::from_be_bytes(bytes)
+        Ok(i16::from_be_bytes(bytes))
     }
 }
 
@@ -159,12 +159,12 @@ impl WriteTo for i32 {
 
 impl ReadFrom for i32 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut bytes = [0u8; 4];
 
-        reader.read_exact(&mut bytes).unwrap_or(());
+        reader.read_exact(&mut bytes)?;
 
-        i32::from_be_bytes(bytes)
+        Ok(i32::from_be_bytes(bytes))
     }
 }
 
@@ -190,11 +190,11 @@ impl WriteTo for i64 {
 
 impl ReadFrom for i64 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut bytes = [0u8; 8];
 
-        reader.read_exact(&mut bytes).unwrap_or(());
+        reader.read_exact(&mut bytes)?;
 
-        i64::from_be_bytes(bytes)
+        Ok(i64::from_be_bytes(bytes))
     }
 }

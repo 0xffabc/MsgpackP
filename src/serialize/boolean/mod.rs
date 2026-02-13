@@ -20,7 +20,7 @@ impl WriteTo for bool {
 
 impl ReadFrom for bool {
     #[inline(always)]
-    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Self {
-        packet_type == Families::TRUE
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+        Ok(packet_type == Families::TRUE)
     }
 }

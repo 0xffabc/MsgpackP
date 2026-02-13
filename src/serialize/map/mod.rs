@@ -45,7 +45,7 @@ impl WriteTo for Vec<(Value, Value)> {
 }
 
 impl ReadFrom for HashMap<Value, Value> {
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut map = HashMap::new();
         let map_length = match packet_type {
             _ if ((Map::FIXMAP..(Map::FIXMAP + 0x0f)).contains(&packet_type)) => {
@@ -53,32 +53,32 @@ impl ReadFrom for HashMap<Value, Value> {
             }
             Map::MAP_16_TYPE => {
                 let mut buffer = [0; 2];
-                reader.read_exact(&mut buffer).unwrap_or(());
+                reader.read_exact(&mut buffer)?;
 
                 u16::from_be_bytes(buffer) as usize
             }
             Map::MAP_32_TYPE => {
                 let mut buffer = [0; 4];
-                reader.read_exact(&mut buffer).unwrap_or(());
+                reader.read_exact(&mut buffer)?;
 
                 u32::from_be_bytes(buffer) as usize
             }
-            _ => return HashMap::new(),
+            _ => return Ok(HashMap::new()),
         };
 
         for _ in 0..map_length {
-            let key = read_value_from_cursor(reader);
-            let value = read_value_from_cursor(reader);
+            let key = read_value_from_cursor(reader)?;
+            let value = read_value_from_cursor(reader)?;
 
             map.insert(key, value);
         }
 
-        map
+        Ok(map)
     }
 }
 
 impl ReadFrom for Vec<(Value, Value)> {
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut vec = Vec::new();
         let vec_length = match packet_type {
             _ if ((Map::FIXMAP..(Map::FIXMAP + 0x0f)).contains(&packet_type)) => {
@@ -86,26 +86,26 @@ impl ReadFrom for Vec<(Value, Value)> {
             }
             Map::MAP_16_TYPE => {
                 let mut buffer = [0; 2];
-                reader.read_exact(&mut buffer).unwrap_or(());
+                reader.read_exact(&mut buffer)?;
 
                 u16::from_be_bytes(buffer) as usize
             }
             Map::MAP_32_TYPE => {
                 let mut buffer = [0; 4];
-                reader.read_exact(&mut buffer).unwrap_or(());
+                reader.read_exact(&mut buffer)?;
 
                 u32::from_be_bytes(buffer) as usize
             }
-            _ => return Vec::new(),
+            _ => return Ok(Vec::new()),
         };
 
         for _ in 0..vec_length {
-            let key = read_value_from_cursor(reader);
-            let value = read_value_from_cursor(reader);
+            let key = read_value_from_cursor(reader)?;
+            let value = read_value_from_cursor(reader)?;
 
             vec.push((key, value));
         }
 
-        vec
+        Ok(vec)
     }
 }

@@ -41,30 +41,30 @@ impl WriteTo for Vec<Value> {
 }
 
 impl ReadFrom for Vec<Value> {
-    fn read_from(array_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(array_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let array_length = match array_type {
             _ if ((0x90..=0x9f).contains(&array_type)) => (array_type - 0x90) as u32,
             Array::ARRAY_16_TYPE => {
                 let mut array_length_bytes = [0; 2];
-                reader.read_exact(&mut array_length_bytes).unwrap_or(());
+                reader.read_exact(&mut array_length_bytes)?;
                 u16::from_be_bytes(array_length_bytes) as u32
             }
             Array::ARRAY_32_TYPE => {
                 let mut array_length_bytes = [0; 4];
-                reader.read_exact(&mut array_length_bytes).unwrap_or(());
+                reader.read_exact(&mut array_length_bytes)?;
                 u32::from_be_bytes(array_length_bytes)
             }
-            _ => return Vec::new(),
+            _ => return Ok(Vec::new()),
         };
 
         let mut values = Vec::with_capacity(array_length as usize);
 
         for _ in 0..array_length {
-            let value = read_value_from_cursor(reader);
+            let value = read_value_from_cursor(reader)?;
 
             values.push(value);
         }
 
-        values
+        Ok(values)
     }
 }

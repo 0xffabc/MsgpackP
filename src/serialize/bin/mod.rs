@@ -27,21 +27,21 @@ impl WriteTo for Vec<u8> {
 
 impl ReadFrom for Vec<u8> {
     #[inline(always)]
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let len = match packet_type {
             Families::BIN8 => {
                 let mut len_bytes = [0; 1];
-                reader.read_exact(&mut len_bytes).unwrap_or(());
+                reader.read_exact(&mut len_bytes)?;
                 len_bytes[0] as usize
             }
             Families::BIN16 => {
                 let mut len_bytes = [0; 2];
-                reader.read_exact(&mut len_bytes).unwrap_or(());
+                reader.read_exact(&mut len_bytes)?;
                 u16::from_be_bytes(len_bytes) as usize
             }
             Families::BIN32 => {
                 let mut len_bytes = [0; 4];
-                reader.read_exact(&mut len_bytes).unwrap_or(());
+                reader.read_exact(&mut len_bytes)?;
                 u32::from_be_bytes(len_bytes) as usize
             }
             _ => 0,
@@ -49,8 +49,8 @@ impl ReadFrom for Vec<u8> {
 
         let mut data = vec![0; len];
 
-        reader.read_exact(&mut data).unwrap_or(());
+        reader.read_exact(&mut data)?;
 
-        data
+        Ok(data)
     }
 }

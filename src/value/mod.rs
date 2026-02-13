@@ -27,21 +27,21 @@ pub enum Value {
     Extension(Extension),
 }
 
-pub fn read_value_from_cursor(reader: &mut Cursor<Vec<u8>>) -> Value {
+pub fn read_value_from_cursor(reader: &mut Cursor<Vec<u8>>) -> Result<Value> {
     let mut header = [0; 1];
 
     reader.read_exact(&mut header).unwrap_or(());
 
     let packet_type = header[0];
 
-    match packet_type {
+    Ok(match packet_type {
         _ if (Families::FIXSTR..=Families::FIXSTR + 0x1f).contains(&packet_type) => {
-            Value::Str(String::read_from(packet_type, reader))
+            Value::Str(String::read_from(packet_type, reader)?)
         }
         Families::NIL | Families::RESERVED => Value::Nil,
-        Families::FALSE | Families::TRUE => Value::Bool(bool::read_from(packet_type, reader)),
+        Families::FALSE | Families::TRUE => Value::Bool(bool::read_from(packet_type, reader)?),
         Families::BIN8 | Families::BIN16 | Families::BIN32 => Value::Array(
-            Vec::<u8>::read_from(packet_type, reader)
+            Vec::<u8>::read_from(packet_type, reader)?
                 .iter()
                 .map(|&byte| Value::U8(byte))
                 .collect::<Vec<_>>(),
@@ -53,36 +53,36 @@ pub fn read_value_from_cursor(reader: &mut Cursor<Vec<u8>>) -> Value {
         | Families::FIXEXT16
         | Families::EXT8
         | Families::EXT16
-        | Families::EXT32 => Value::Extension(Extension::read_from(packet_type, reader)),
-        Families::FLOAT32 => Value::F32(OrderedFloat(f32::read_from(packet_type, reader))),
-        Families::FLOAT64 => Value::F64(OrderedFloat(f64::read_from(packet_type, reader))),
-        Families::UINT8 => Value::U8(u8::read_from(packet_type, reader)),
-        Families::UINT16 => Value::U16(u16::read_from(packet_type, reader)),
-        Families::UINT32 => Value::U32(u32::read_from(packet_type, reader)),
-        Families::UINT64 => Value::U64(u64::read_from(packet_type, reader)),
-        Families::INT8 => Value::I8(i8::read_from(packet_type, reader)),
-        Families::INT16 => Value::I16(i16::read_from(packet_type, reader)),
-        Families::INT32 => Value::I32(i32::read_from(packet_type, reader)),
-        Families::INT64 => Value::I64(i64::read_from(packet_type, reader)),
+        | Families::EXT32 => Value::Extension(Extension::read_from(packet_type, reader)?),
+        Families::FLOAT32 => Value::F32(OrderedFloat(f32::read_from(packet_type, reader)?)),
+        Families::FLOAT64 => Value::F64(OrderedFloat(f64::read_from(packet_type, reader)?)),
+        Families::UINT8 => Value::U8(u8::read_from(packet_type, reader)?),
+        Families::UINT16 => Value::U16(u16::read_from(packet_type, reader)?),
+        Families::UINT32 => Value::U32(u32::read_from(packet_type, reader)?),
+        Families::UINT64 => Value::U64(u64::read_from(packet_type, reader)?),
+        Families::INT8 => Value::I8(i8::read_from(packet_type, reader)?),
+        Families::INT16 => Value::I16(i16::read_from(packet_type, reader)?),
+        Families::INT32 => Value::I32(i32::read_from(packet_type, reader)?),
+        Families::INT64 => Value::I64(i64::read_from(packet_type, reader)?),
         Families::STR8 | Families::STR16 | Families::STR32 => {
-            Value::Str(String::read_from(packet_type, reader))
+            Value::Str(String::read_from(packet_type, reader)?)
         }
         Array::ARRAY_16_TYPE | Array::ARRAY_32_TYPE => {
-            Value::Array(Vec::<Value>::read_from(packet_type, reader))
+            Value::Array(Vec::<Value>::read_from(packet_type, reader)?)
         }
         _ if (Array::FIXARRAY_TYPE..=(Array::FIXARRAY_TYPE + 0x1f)).contains(&packet_type) => {
-            Value::Array(Vec::<Value>::read_from(packet_type, reader))
+            Value::Array(Vec::<Value>::read_from(packet_type, reader)?)
         }
-        0x00..0x7f => Value::U8(u8::read_from(packet_type, reader)),
-        0xe0..=0xff => Value::I8(i8::read_from(packet_type, reader)),
+        0x00..0x7f => Value::U8(u8::read_from(packet_type, reader)?),
+        0xe0..=0xff => Value::I8(i8::read_from(packet_type, reader)?),
         _ if (Families::FIXMAP_TYPE..=(Families::FIXMAP_TYPE + 0x0f)).contains(&packet_type) => {
-            Value::Map(Vec::<(Value, Value)>::read_from(packet_type, reader))
+            Value::Map(Vec::<(Value, Value)>::read_from(packet_type, reader)?)
         }
         Families::MAP16 | Families::MAP32 => {
-            Value::Map(Vec::<(Value, Value)>::read_from(packet_type, reader))
+            Value::Map(Vec::<(Value, Value)>::read_from(packet_type, reader)?)
         }
         127..=191 => Value::Nil,
-    }
+    })
 }
 
 macro_rules! typed_to_value {

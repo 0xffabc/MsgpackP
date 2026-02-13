@@ -29,54 +29,54 @@ impl WriteTo for String {
 
 impl ReadFrom for String {
     #[inline(always)]
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         match packet_type {
             _ if (Families::FIXSTR..=Families::FIXSTR + 0x1f).contains(&packet_type) => {
                 let len = packet_type - 0xa0;
 
                 let mut buf = vec![0; len as usize];
 
-                reader.read_exact(&mut buf).unwrap_or(());
+                reader.read_exact(&mut buf)?;
 
-                String::from_utf8(buf).unwrap_or_default()
+                Ok(String::from_utf8(buf)?)
             }
             Families::STR8 => {
                 let mut len_buf = [0; 1];
 
-                reader.read_exact(&mut len_buf).unwrap_or(());
+                reader.read_exact(&mut len_buf)?;
 
                 let len = len_buf[0];
                 let mut buf = vec![0; len as usize];
 
-                reader.read_exact(&mut buf).unwrap_or(());
+                reader.read_exact(&mut buf)?;
 
-                String::from_utf8(buf).unwrap_or_default()
+                Ok(String::from_utf8(buf)?)
             }
             Families::STR16 => {
                 let mut len_buf = [0; 2];
 
-                reader.read_exact(&mut len_buf).unwrap_or(());
+                reader.read_exact(&mut len_buf)?;
 
                 let len = u16::from_be_bytes(len_buf);
                 let mut buf = vec![0; len as usize];
 
-                reader.read_exact(&mut buf).unwrap_or(());
+                reader.read_exact(&mut buf)?;
 
-                String::from_utf8(buf).unwrap_or_default()
+                Ok(String::from_utf8(buf)?)
             }
             Families::STR32 => {
                 let mut len_buf = [0; 4];
 
-                reader.read_exact(&mut len_buf).unwrap_or(());
+                reader.read_exact(&mut len_buf)?;
 
                 let len = u32::from_be_bytes(len_buf);
                 let mut buf = vec![0; len as usize];
 
-                reader.read_exact(&mut buf).unwrap_or(());
+                reader.read_exact(&mut buf)?;
 
-                String::from_utf8(buf).unwrap_or_default()
+                Ok(String::from_utf8(buf)?)
             }
-            _ => String::new(),
+            _ => Ok(String::new()),
         }
     }
 }

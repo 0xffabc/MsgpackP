@@ -15,12 +15,12 @@ impl WriteTo for f32 {
 
 impl ReadFrom for f32 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut bytes = [0u8; 4];
 
-        reader.read_exact(&mut bytes).unwrap_or(());
+        reader.read_exact(&mut bytes)?;
 
-        f32::from_be_bytes(bytes)
+        Ok(f32::from_be_bytes(bytes))
     }
 }
 
@@ -46,11 +46,11 @@ impl WriteTo for f64 {
 
 impl ReadFrom for f64 {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         let mut bytes = [0u8; 8];
 
-        reader.read_exact(&mut bytes).unwrap_or(());
+        reader.read_exact(&mut bytes)?;
 
-        f64::from_be_bytes(bytes)
+        Ok(f64::from_be_bytes(bytes))
     }
 }

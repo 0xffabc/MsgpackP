@@ -17,10 +17,10 @@ impl<O> WriteTo for Option<O> {
 
 impl ReadFrom for Option<()> {
     #[inline(always)]
-    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Self {
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
         match packet_type {
-            Families::NIL => None,
-            _ => Some(()),
+            Families::NIL => Ok(None),
+            _ => Ok(Some(())),
         }
     }
 }

@@ -16,7 +16,9 @@ pub trait WriteTo {
 }
 
 pub trait ReadFrom {
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Self;
+    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self>
+    where
+        Self: Sized;
 }
 
 #[cfg(test)]
@@ -72,7 +74,7 @@ mod tests {
             204, 204, 205,
         ];
 
-        let val = read_value_from_cursor(&mut Cursor::new(packet));
+        let val = read_value_from_cursor(&mut Cursor::new(packet)).unwrap();
 
         assert_eq!(
             val,
@@ -97,7 +99,7 @@ mod tests {
             163, 102, 111, 111, 1, 163, 98, 97, 122, 203, 63, 224, 0, 0, 0, 0, 0, 0,
         ];
 
-        let val: Value = read_value_from_cursor(&mut Cursor::new(example));
+        let val: Value = read_value_from_cursor(&mut Cursor::new(example)).unwrap();
 
         assert_eq!(
             val,
