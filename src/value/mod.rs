@@ -4,6 +4,7 @@ use crate::{
     constants::Families,
     msgpack::{WriteTo, ext::Extension},
 };
+
 use anyhow::Result;
 use ordered_float::OrderedFloat;
 
@@ -206,6 +207,7 @@ impl WriteTo for Value {
             Value::Bool(value) => value.write_to(buffer)?,
             Value::Extension(value) => value.write_to(buffer)?,
         }
+
         Ok(())
     }
 }
