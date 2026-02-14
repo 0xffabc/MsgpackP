@@ -102,6 +102,12 @@ pub struct Extension {
     data: Vec<u8>,
 }
 
+impl Extension {
+    pub fn new(type_: u8, data: Vec<u8>) -> Self {
+        Extension { type_, data }
+    }
+}
+
 impl WriteTo for Extension {
     #[inline(always)]
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()> {
@@ -137,7 +143,7 @@ impl ReadFrom for Extension {
 
         let data_len = u32::from_be_bytes(data_len_buffer) as usize;
 
-        let mut data = vec![0u8; data_len];
+        let mut data = Vec::with_capacity(data_len);
 
         reader.read_exact(&mut data)?;
 

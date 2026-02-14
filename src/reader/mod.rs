@@ -82,33 +82,39 @@ pub fn read_value_from_cursor<T: AsRef<[u8]>>(reader: &mut Cursor<T>) -> Result<
     let marker = classify_marker(packet_type);
 
     Ok(match marker {
-        Marker::FixStr => Value::from(String::read_from(packet_type, reader)?),
+        Marker::FixStr => Value::str(String::read_from(packet_type, reader)?),
         Marker::Nil => Value::Nil,
-        Marker::Boolean => Value::from(bool::read_from(packet_type, reader)?),
-        Marker::Binary => Value::from(
+        Marker::Boolean => Value::bool(bool::read_from(packet_type, reader)?),
+        Marker::Binary => Value::bin(
             Vec::<u8>::read_from(packet_type, reader)?
                 .iter()
-                .map(|&byte| Value::U8(byte))
+                .map(|&byte| byte.clone())
                 .collect::<Vec<_>>(),
         ),
-        Marker::Extension => Value::from(Extension::read_from(packet_type, reader)?),
-        Marker::Float32 => Value::from(f32::read_from(packet_type, reader)?),
-        Marker::Float64 => Value::from(f64::read_from(packet_type, reader)?),
-        Marker::UInt8 => Value::from(u8::read_from(packet_type, reader)?),
-        Marker::UInt16 => Value::from(u16::read_from(packet_type, reader)?),
-        Marker::UInt32 => Value::from(u32::read_from(packet_type, reader)?),
-        Marker::UInt64 => Value::from(u64::read_from(packet_type, reader)?),
-        Marker::Int8 => Value::from(i8::read_from(packet_type, reader)?),
-        Marker::Int16 => Value::from(i16::read_from(packet_type, reader)?),
-        Marker::Int32 => Value::from(i32::read_from(packet_type, reader)?),
-        Marker::Int64 => Value::from(i64::read_from(packet_type, reader)?),
-        Marker::String => Value::from(String::read_from(packet_type, reader)?),
-        Marker::Array => Value::from(Vec::<Value>::read_from(packet_type, reader)?),
-        Marker::FixArray => Value::from(Vec::<Value>::read_from(packet_type, reader)?),
-        Marker::PosFixInt => Value::from(u8::read_from(packet_type, reader)?),
-        Marker::NegFixInt => Value::from(i8::read_from(packet_type, reader)?),
-        Marker::FixMap => Value::from(Vec::<(Value, Value)>::read_from(packet_type, reader)?),
-        Marker::Map => Value::from(Vec::<(Value, Value)>::read_from(packet_type, reader)?),
+        Marker::Extension => Value::extension(Extension::read_from(packet_type, reader)?),
+        Marker::Float32 => Value::f32(ordered_float::OrderedFloat(f32::read_from(
+            packet_type,
+            reader,
+        )?)),
+        Marker::Float64 => Value::f64(ordered_float::OrderedFloat(f64::read_from(
+            packet_type,
+            reader,
+        )?)),
+        Marker::UInt8 => Value::u8(u8::read_from(packet_type, reader)?),
+        Marker::UInt16 => Value::u16(u16::read_from(packet_type, reader)?),
+        Marker::UInt32 => Value::u32(u32::read_from(packet_type, reader)?),
+        Marker::UInt64 => Value::u64(u64::read_from(packet_type, reader)?),
+        Marker::Int8 => Value::i8(i8::read_from(packet_type, reader)?),
+        Marker::Int16 => Value::i16(i16::read_from(packet_type, reader)?),
+        Marker::Int32 => Value::i32(i32::read_from(packet_type, reader)?),
+        Marker::Int64 => Value::i64(i64::read_from(packet_type, reader)?),
+        Marker::String => Value::str(String::read_from(packet_type, reader)?),
+        Marker::Array => Value::array(Vec::<Value>::read_from(packet_type, reader)?),
+        Marker::FixArray => Value::array(Vec::<Value>::read_from(packet_type, reader)?),
+        Marker::PosFixInt => Value::u8(u8::read_from(packet_type, reader)?),
+        Marker::NegFixInt => Value::i8(i8::read_from(packet_type, reader)?),
+        Marker::FixMap => Value::map(Vec::<(Value, Value)>::read_from(packet_type, reader)?),
+        Marker::Map => Value::map(Vec::<(Value, Value)>::read_from(packet_type, reader)?),
         Marker::Unknown => Value::Nil,
     })
 }

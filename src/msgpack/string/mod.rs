@@ -34,7 +34,7 @@ impl ReadFrom for String {
             _ if (Families::FIXSTR..=Families::FIXSTR + 0x1f).contains(&packet_type) => {
                 let len = packet_type - 0xa0;
 
-                let mut buf = vec![0; len as usize];
+                let mut buf = Vec::with_capacity(len as usize);
 
                 reader.read_exact(&mut buf)?;
 
@@ -46,7 +46,7 @@ impl ReadFrom for String {
                 reader.read_exact(&mut len_buf)?;
 
                 let len = len_buf[0];
-                let mut buf = vec![0; len as usize];
+                let mut buf = Vec::with_capacity(len as usize);
 
                 reader.read_exact(&mut buf)?;
 
@@ -58,7 +58,7 @@ impl ReadFrom for String {
                 reader.read_exact(&mut len_buf)?;
 
                 let len = u16::from_be_bytes(len_buf);
-                let mut buf = vec![0; len as usize];
+                let mut buf = Vec::with_capacity(len as usize);
 
                 reader.read_exact(&mut buf)?;
 
@@ -70,7 +70,7 @@ impl ReadFrom for String {
                 reader.read_exact(&mut len_buf)?;
 
                 let len = u32::from_be_bytes(len_buf);
-                let mut buf = vec![0; len as usize];
+                let mut buf = Vec::with_capacity(len as usize);
 
                 reader.read_exact(&mut buf)?;
 

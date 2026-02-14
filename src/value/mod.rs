@@ -35,6 +35,11 @@ impl Value {
     }
 
     #[inline(always)]
+    pub fn bin(value: Vec<u8>) -> Self {
+        Value::Extension(Extension::new(Families::BIN8, value))
+    }
+
+    #[inline(always)]
     pub fn bool(value: bool) -> Self {
         Value::Bool(value)
     }
@@ -95,13 +100,13 @@ impl Value {
     }
 
     #[inline(always)]
-    pub fn array<T: Into<Vec<Value>>>(value: T) -> Self {
-        Value::Array(value.into())
+    pub fn array(value: Vec<Value>) -> Self {
+        Value::Array(value)
     }
 
     #[inline(always)]
-    pub fn map<T: Into<Vec<(Value, Value)>>>(value: T) -> Self {
-        Value::Map(value.into())
+    pub fn map(value: Vec<(Value, Value)>) -> Self {
+        Value::Map(value)
     }
 
     #[inline(always)]
@@ -130,59 +135,6 @@ impl fmt::Display for Value {
             Value::F32(value) => write!(f, "{}", value),
             Value::F64(value) => write!(f, "{}", value),
         }
-    }
-}
-
-macro_rules! typed_to_value {
-    ($($type:ty, $name:ident)?) => {
-        $(
-            impl From<$type> for Value {
-                #[inline(always)]
-                fn from(value: $type) -> Self {
-                    Value::$name(value)
-                }
-            }
-        )*
-    };
-}
-
-impl From<f32> for Value {
-    #[inline(always)]
-    fn from(value: f32) -> Self {
-        Value::F32(OrderedFloat(value))
-    }
-}
-
-impl From<f64> for Value {
-    #[inline(always)]
-    fn from(value: f64) -> Self {
-        Value::F64(OrderedFloat(value))
-    }
-}
-
-impl From<Extension> for Value {
-    #[inline(always)]
-    fn from(value: Extension) -> Self {
-        Value::Extension(value)
-    }
-}
-
-typed_to_value!(u8, U8);
-typed_to_value!(u16, U16);
-typed_to_value!(u32, U32);
-typed_to_value!(u64, U64);
-typed_to_value!(i8, I8);
-typed_to_value!(i16, I16);
-typed_to_value!(i32, I32);
-typed_to_value!(i64, I64);
-typed_to_value!(String, Str);
-typed_to_value!(bool, Bool);
-typed_to_value!(Vec<(Value, Value)>, Map);
-
-impl From<Vec<Value>> for Value {
-    #[inline(always)]
-    fn from(value: Vec<Value>) -> Self {
-        Value::Array(value)
     }
 }
 

@@ -47,7 +47,7 @@ impl ReadFrom for Vec<u8> {
             _ => 0,
         };
 
-        let mut data = vec![0; len];
+        let mut data = Vec::with_capacity(len);
 
         reader.read_exact(&mut data)?;
 
