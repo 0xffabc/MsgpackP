@@ -3,6 +3,7 @@
 > [!WARNING]
 > 
 > MsgpackP is no longer a simple .js script, however the .js version will remain in the repository root as a relic of the time
+> Please. Please. PLEASE. PLEASE. DO NOT use the .js one-filer version. **The rust version is 900-1200 times faster**
 
 # Building
 
@@ -18,14 +19,14 @@ Serialize with
 let mut buffer = Vec::new();
 
 let packet = vec![
-    Value::Str("sp".to_string()),
+    Value::Str("sp"),
     Value::Array(vec![Value::Map(vec![(
-        Value::Str("name".to_string()),
-        Value::Str("0xffabc".to_string()),
+        Value::Str("name"),
+        Value::Str("0xffabc"),
     )])]),
 ];
 
-packet.write_to(&mut buffer).unwrap();
+packet.write_to(&mut buffer)?;
 ```
 
 Deserialize with
@@ -36,14 +37,15 @@ let packet = vec![
     204, 204, 205,
 ];
 
-let val: Value = read_value_from_cursor(&mut Cursor::new(packet)).unwrap();
+let mut reader = Reader::new(&packet);
+let val = reader.pull_value()?;
 
 assert_eq!(
             val,
             Value::Array(vec![
-                Value::Str("ch".to_string()),
+                Value::Str("ch"),
                 Value::Array(vec![
-                    Value::Str("Hello".to_string()),
+                    Value::Str("Hello"),
                     Value::U8(1),
                     Value::F64(OrderedFloat(1.3)),
                 ])
