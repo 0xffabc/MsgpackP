@@ -1,10 +1,10 @@
-use std::io::{Cursor, Read, Write};
+use std::io::Write;
 
 use anyhow::Result;
 
 use crate::{
     msgpack::{ReadFrom, WriteTo},
-    reader::read_value_from_cursor,
+    reader::Reader,
     value::Value,
 };
 
@@ -16,7 +16,7 @@ impl Array {
     pub const FIXARRAY_TYPE: u8 = 0x90;
 }
 
-impl WriteTo for Vec<Value> {
+impl WriteTo for Vec<Value<'_>> {
     #[inline(always)]
     fn write_to<U: Write>(&self, buffer: &mut U) -> Result<()> {
         let array_length = self.len();
@@ -41,20 +41,18 @@ impl WriteTo for Vec<Value> {
     }
 }
 
-impl ReadFrom for Vec<Value> {
+impl<'a> ReadFrom<'a> for Vec<Value<'a>> {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(array_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
+    fn read_from<U: AsRef<[u8]> + 'a>(array_type: u8, reader: &'a mut Reader<U>) -> Result<Self> {
         let array_length = match array_type {
             _ if ((0x90..=0x9f).contains(&array_type)) => (array_type - 0x90) as u32,
             Array::ARRAY_16_TYPE => {
-                let mut array_length_bytes = [0; 2];
-                reader.read_exact(&mut array_length_bytes)?;
-                u16::from_be_bytes(array_length_bytes) as u32
+                let bytes = reader.pull(2)?;
+                u16::from_be_bytes([bytes[0], bytes[1]]) as u32
             }
             Array::ARRAY_32_TYPE => {
-                let mut array_length_bytes = [0; 4];
-                reader.read_exact(&mut array_length_bytes)?;
-                u32::from_be_bytes(array_length_bytes)
+                let bytes = reader.pull(4)?;
+                u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])
             }
             _ => return Ok(Vec::new()),
         };
@@ -62,9 +60,12 @@ impl ReadFrom for Vec<Value> {
         let mut values = Vec::with_capacity(array_length as usize);
 
         for _ in 0..array_length {
-            let value = read_value_from_cursor(reader)?;
+            unsafe {
+                let reader_ptr = reader as *mut Reader<U> as *mut Reader<U>;
+                let reader_ptr = &mut *reader_ptr;
 
-            values.push(value);
+                values.push(reader_ptr.pull_value().unwrap_or(Value::Nil));
+            }
         }
 
         Ok(values)

@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group};
-use std::{hint::black_box, io::Cursor};
+use std::hint::black_box;
 
-use msgpackp::reader;
+use msgpackp::reader::Reader;
 
 fn bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("Msgpack decode");
@@ -17,9 +17,9 @@ fn bench(c: &mut Criterion) {
                 0,
             ];
 
-            let mut cursor = Cursor::new(packet);
+            let mut reader = Reader::new(packet);
 
-            black_box(reader::read_value_from_cursor(&mut cursor)).unwrap();
+            let _ = black_box(reader.pull_value());
         });
     });
 

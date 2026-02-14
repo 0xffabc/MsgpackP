@@ -1,7 +1,8 @@
 use crate::constants::Families;
 use crate::msgpack::{ReadFrom, WriteTo};
+use crate::reader::Reader;
 use anyhow::Result;
-use std::io::{Cursor, Read, Write};
+use std::io::Write;
 
 impl WriteTo for [u8; 1] {
     #[inline(always)]
@@ -13,9 +14,9 @@ impl WriteTo for [u8; 1] {
     }
 }
 
-impl ReadFrom for [u8; 1] {
+impl<'a> ReadFrom<'a> for [u8; 1] {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, _reader: &mut Cursor<T>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, _reader: &mut Reader<T>) -> Result<Self> {
         Ok([packet_type])
     }
 }
@@ -30,12 +31,11 @@ impl WriteTo for [u8; 2] {
     }
 }
 
-impl ReadFrom for [u8; 2] {
+impl<'a> ReadFrom<'a> for [u8; 2] {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut bytes = [0u8; 2];
-        reader.read_exact(&mut bytes)?;
-        Ok(bytes)
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(2)?;
+        Ok([bytes[0], bytes[1]])
     }
 }
 
@@ -49,12 +49,11 @@ impl WriteTo for [u8; 4] {
     }
 }
 
-impl ReadFrom for [u8; 4] {
+impl<'a> ReadFrom<'a> for [u8; 4] {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut bytes = [0u8; 4];
-        reader.read_exact(&mut bytes)?;
-        Ok(bytes)
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(4)?;
+        Ok([bytes[0], bytes[1], bytes[2], bytes[3]])
     }
 }
 
@@ -68,12 +67,13 @@ impl WriteTo for [u8; 8] {
     }
 }
 
-impl ReadFrom for [u8; 8] {
+impl<'a> ReadFrom<'a> for [u8; 8] {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut bytes = [0u8; 8];
-        reader.read_exact(&mut bytes)?;
-        Ok(bytes)
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(8)?;
+        Ok([
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+        ])
     }
 }
 
@@ -87,12 +87,14 @@ impl WriteTo for [u8; 16] {
     }
 }
 
-impl ReadFrom for [u8; 16] {
+impl<'a> ReadFrom<'a> for [u8; 16] {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut bytes = [0u8; 16];
-        reader.read_exact(&mut bytes)?;
-        Ok(bytes)
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(16)?;
+        Ok([
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15],
+        ])
     }
 }
 
@@ -134,18 +136,12 @@ impl WriteTo for Extension {
     }
 }
 
-impl ReadFrom for Extension {
+impl<'a> ReadFrom<'a> for Extension {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut data_len_buffer = [0u8; 4];
-
-        reader.read_exact(&mut data_len_buffer)?;
-
-        let data_len = u32::from_be_bytes(data_len_buffer) as usize;
-
-        let mut data = Vec::with_capacity(data_len);
-
-        reader.read_exact(&mut data)?;
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(4)?;
+        let data_len = u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
+        let data = reader.pull(data_len)?.to_vec();
 
         Ok(Extension {
             type_: packet_type,

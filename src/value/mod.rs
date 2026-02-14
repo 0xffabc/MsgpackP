@@ -9,7 +9,7 @@ use anyhow::Result;
 use ordered_float::OrderedFloat;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum Value {
+pub enum Value<'a> {
     Nil,
     Bool(bool),
     U8(u8),
@@ -22,13 +22,13 @@ pub enum Value {
     I16(i16),
     I32(i32),
     I64(i64),
-    Str(String),
-    Array(Vec<Value>),
-    Map(Vec<(Value, Value)>),
+    Str(&'a str),
+    Array(Vec<Value<'a>>),
+    Map(Vec<(Value<'a>, Value<'a>)>),
     Extension(Extension),
 }
 
-impl Value {
+impl<'a> Value<'a> {
     #[inline(always)]
     pub fn nil() -> Self {
         Value::Nil
@@ -95,17 +95,17 @@ impl Value {
     }
 
     #[inline(always)]
-    pub fn str<T: Into<String>>(value: T) -> Self {
-        Value::Str(value.into())
+    pub fn str(value: &'a str) -> Self {
+        Value::Str(value)
     }
 
     #[inline(always)]
-    pub fn array(value: Vec<Value>) -> Self {
+    pub fn array(value: Vec<Value<'a>>) -> Self {
         Value::Array(value)
     }
 
     #[inline(always)]
-    pub fn map(value: Vec<(Value, Value)>) -> Self {
+    pub fn map(value: Vec<(Value<'a>, Value<'a>)>) -> Self {
         Value::Map(value)
     }
 
@@ -115,7 +115,7 @@ impl Value {
     }
 }
 
-impl fmt::Display for Value {
+impl fmt::Display for Value<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Value::Nil => write!(f, "null"),
@@ -138,7 +138,7 @@ impl fmt::Display for Value {
     }
 }
 
-impl WriteTo for Value {
+impl WriteTo for Value<'_> {
     #[inline(always)]
     fn write_to<U: Write>(&self, buffer: &mut U) -> Result<()> {
         match self {
@@ -152,7 +152,7 @@ impl WriteTo for Value {
             Value::I16(value) => value.write_to(buffer)?,
             Value::I32(value) => value.write_to(buffer)?,
             Value::I64(value) => value.write_to(buffer)?,
-            Value::Str(value) => value.write_to(buffer)?,
+            Value::Str(value) => value.to_owned().to_owned().write_to(buffer)?,
             Value::Array(value) => value.write_to(buffer)?,
             Value::Map(value) => value.write_to(buffer)?,
             Value::Nil => buffer.write_all(&Families::NIL.to_be_bytes())?,

@@ -1,7 +1,8 @@
 use crate::constants::Families;
 use crate::msgpack::{ReadFrom, WriteTo};
+use crate::reader::Reader;
 use anyhow::Result;
-use std::io::{Cursor, Write};
+use std::io::Write;
 
 impl<O> WriteTo for Option<O> {
     #[inline(always)]
@@ -15,9 +16,9 @@ impl<O> WriteTo for Option<O> {
     }
 }
 
-impl ReadFrom for Option<()> {
+impl<'a> ReadFrom<'a> for Option<()> {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, _reader: &mut Cursor<T>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]> + 'a>(packet_type: u8, _reader: &'a mut Reader<T>) -> Result<Self> {
         match packet_type {
             Families::NIL => Ok(None),
             _ => Ok(Some(())),

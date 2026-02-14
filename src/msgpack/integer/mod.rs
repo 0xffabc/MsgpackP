@@ -1,7 +1,8 @@
 use crate::constants::Families;
 use crate::msgpack::{ReadFrom, WriteTo};
+use crate::reader::Reader;
 use anyhow::Result;
-use std::io::{Cursor, Read, Write};
+use std::io::Write;
 
 impl WriteTo for u8 {
     #[inline(always)]
@@ -15,9 +16,9 @@ impl WriteTo for u8 {
     }
 }
 
-impl ReadFrom for u8 {
+impl<'a> ReadFrom<'a> for u8 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, _reader: &mut Cursor<T>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, _reader: &mut Reader<T>) -> Result<Self> {
         Ok(packet_type)
     }
 }
@@ -32,14 +33,12 @@ impl WriteTo for u16 {
     }
 }
 
-impl ReadFrom for u16 {
+impl<'a> ReadFrom<'a> for u16 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut byte = [0u8; 2];
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let byte = reader.pull(2)?;
 
-        reader.read_exact(&mut byte)?;
-
-        Ok(u16::from_be_bytes(byte))
+        Ok(u16::from_be_bytes([byte[0], byte[1]]))
     }
 }
 
@@ -53,14 +52,12 @@ impl WriteTo for u32 {
     }
 }
 
-impl ReadFrom for u32 {
+impl<'a> ReadFrom<'a> for u32 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut byte = [0u8; 4];
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let byte = reader.pull(4)?;
 
-        reader.read_exact(&mut byte)?;
-
-        Ok(u32::from_be_bytes(byte))
+        Ok(u32::from_be_bytes([byte[0], byte[1], byte[2], byte[3]]))
     }
 }
 
@@ -84,14 +81,14 @@ impl WriteTo for u64 {
     }
 }
 
-impl ReadFrom for u64 {
+impl<'a> ReadFrom<'a> for u64 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut byte = [0u8; 8];
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let byte = reader.pull(8)?;
 
-        reader.read_exact(&mut byte)?;
-
-        Ok(u64::from_be_bytes(byte))
+        Ok(u64::from_be_bytes([
+            byte[0], byte[1], byte[2], byte[3], byte[4], byte[5], byte[6], byte[7],
+        ]))
     }
 }
 
@@ -111,18 +108,16 @@ impl WriteTo for i8 {
     }
 }
 
-impl ReadFrom for i8 {
+impl<'a> ReadFrom<'a> for i8 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
         if packet_type >= 0xe0 {
             return Ok(-((!packet_type as i8).wrapping_add(1)));
         }
 
-        let mut byte = [0u8; 1];
+        let byte = reader.pull(1)?;
 
-        reader.read_exact(&mut byte)?;
-
-        Ok(i8::from_be_bytes(byte))
+        Ok(i8::from_be_bytes([byte[0]]))
     }
 }
 
@@ -136,14 +131,12 @@ impl WriteTo for i16 {
     }
 }
 
-impl ReadFrom for i16 {
+impl<'a> ReadFrom<'a> for i16 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut bytes = [0u8; 2];
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(2)?;
 
-        reader.read_exact(&mut bytes)?;
-
-        Ok(i16::from_be_bytes(bytes))
+        Ok(i16::from_be_bytes([bytes[0], bytes[1]]))
     }
 }
 
@@ -157,14 +150,12 @@ impl WriteTo for i32 {
     }
 }
 
-impl ReadFrom for i32 {
+impl<'a> ReadFrom<'a> for i32 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut bytes = [0u8; 4];
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(4)?;
 
-        reader.read_exact(&mut bytes)?;
-
-        Ok(i32::from_be_bytes(bytes))
+        Ok(i32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
     }
 }
 
@@ -188,13 +179,13 @@ impl WriteTo for i64 {
     }
 }
 
-impl ReadFrom for i64 {
+impl<'a> ReadFrom<'a> for i64 {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut bytes = [0u8; 8];
+    fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
+        let bytes = reader.pull(8)?;
 
-        reader.read_exact(&mut bytes)?;
-
-        Ok(i64::from_be_bytes(bytes))
+        Ok(i64::from_be_bytes([
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+        ]))
     }
 }

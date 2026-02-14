@@ -1,7 +1,8 @@
 use crate::constants::Families;
 use crate::msgpack::{ReadFrom, WriteTo};
+use crate::reader::Reader;
 use anyhow::Result;
-use std::io::{Cursor, Write};
+use std::io::Write;
 
 impl WriteTo for bool {
     #[inline(always)]
@@ -18,9 +19,9 @@ impl WriteTo for bool {
     }
 }
 
-impl ReadFrom for bool {
+impl<'a> ReadFrom<'a> for bool {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, _reader: &mut Cursor<T>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, _reader: &mut Reader<T>) -> Result<Self> {
         Ok(packet_type == Families::TRUE)
     }
 }

@@ -1,7 +1,8 @@
 use crate::constants::Families;
 use crate::msgpack::{ReadFrom, WriteTo};
+use crate::reader::Reader;
 use anyhow::Result;
-use std::io::{Cursor, Read, Write};
+use std::io::Write;
 
 impl WriteTo for Vec<u8> {
     #[inline(always)]
@@ -25,32 +26,24 @@ impl WriteTo for Vec<u8> {
     }
 }
 
-impl ReadFrom for Vec<u8> {
+impl<'a> ReadFrom<'a> for Vec<u8> {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
         let len = match packet_type {
-            Families::BIN8 => {
-                let mut len_bytes = [0; 1];
-                reader.read_exact(&mut len_bytes)?;
-                len_bytes[0] as usize
-            }
+            Families::BIN8 => reader.pull(1)?[0] as usize,
             Families::BIN16 => {
-                let mut len_bytes = [0; 2];
-                reader.read_exact(&mut len_bytes)?;
-                u16::from_be_bytes(len_bytes) as usize
+                let buf = reader.pull(2)?;
+                u16::from_be_bytes([buf[0], buf[1]]) as usize
             }
             Families::BIN32 => {
-                let mut len_bytes = [0; 4];
-                reader.read_exact(&mut len_bytes)?;
-                u32::from_be_bytes(len_bytes) as usize
+                let buf = reader.pull(4)?;
+                u32::from_be_bytes([buf[0], buf[1], buf[2], buf[3]]) as usize
             }
             _ => 0,
         };
 
-        let mut data = Vec::with_capacity(len);
+        let data = reader.pull(len)?;
 
-        reader.read_exact(&mut data)?;
-
-        Ok(data)
+        Ok(data.to_vec())
     }
 }

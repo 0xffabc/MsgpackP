@@ -1,13 +1,10 @@
-use std::{
-    collections::HashMap,
-    io::{Cursor, Read, Write},
-};
+use std::io::Write;
 
 use anyhow::Result;
 
 use crate::{
     msgpack::{ReadFrom, WriteTo},
-    reader::read_value_from_cursor,
+    reader::Reader,
     value::Value,
 };
 
@@ -19,7 +16,7 @@ impl Map {
     pub const MAP_32_TYPE: u8 = 0xdf;
 }
 
-impl WriteTo for Vec<(Value, Value)> {
+impl WriteTo for Vec<(Value<'_>, Value<'_>)> {
     #[inline(always)]
     fn write_to<U: Write>(&self, buffer: &mut U) -> Result<()> {
         let map_length = self.len();
@@ -45,68 +42,41 @@ impl WriteTo for Vec<(Value, Value)> {
     }
 }
 
-impl ReadFrom for HashMap<Value, Value> {
+impl<'a> ReadFrom<'a> for Vec<(Value<'a>, Value<'a>)> {
     #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut map = HashMap::new();
-        let map_length = match packet_type {
-            _ if ((Map::FIXMAP..(Map::FIXMAP + 0x0f)).contains(&packet_type)) => {
-                packet_type as usize - Map::FIXMAP as usize
-            }
-            Map::MAP_16_TYPE => {
-                let mut buffer = [0; 2];
-                reader.read_exact(&mut buffer)?;
-
-                u16::from_be_bytes(buffer) as usize
-            }
-            Map::MAP_32_TYPE => {
-                let mut buffer = [0; 4];
-                reader.read_exact(&mut buffer)?;
-
-                u32::from_be_bytes(buffer) as usize
-            }
-            _ => return Ok(HashMap::new()),
-        };
-
-        for _ in 0..map_length {
-            let key = read_value_from_cursor(reader)?;
-            let value = read_value_from_cursor(reader)?;
-
-            map.insert(key, value);
-        }
-
-        Ok(map)
-    }
-}
-
-impl ReadFrom for Vec<(Value, Value)> {
-    #[inline(always)]
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
-        let mut vec = Vec::new();
+    fn read_from<U: AsRef<[u8]> + 'a>(packet_type: u8, reader: &'a mut Reader<U>) -> Result<Self> {
         let vec_length = match packet_type {
             _ if ((Map::FIXMAP..(Map::FIXMAP + 0x0f)).contains(&packet_type)) => {
                 packet_type as usize - Map::FIXMAP as usize
             }
             Map::MAP_16_TYPE => {
-                let mut buffer = [0; 2];
-                reader.read_exact(&mut buffer)?;
+                let buffer = reader.pull(2)?;
 
-                u16::from_be_bytes(buffer) as usize
+                u16::from_be_bytes([buffer[0], buffer[1]]) as usize
             }
             Map::MAP_32_TYPE => {
-                let mut buffer = [0; 4];
-                reader.read_exact(&mut buffer)?;
+                let buffer = reader.pull(4)?;
 
-                u32::from_be_bytes(buffer) as usize
+                u32::from_be_bytes([buffer[0], buffer[1], buffer[2], buffer[3]]) as usize
             }
             _ => return Ok(Vec::new()),
         };
 
-        for _ in 0..vec_length {
-            let key = read_value_from_cursor(reader)?;
-            let value = read_value_from_cursor(reader)?;
+        let mut vec = Vec::with_capacity(vec_length);
 
-            vec.push((key, value));
+        for _ in 0..vec_length {
+            unsafe {
+                let reader_ptr0 = reader as *mut Reader<U> as *mut Reader<U>;
+                let reader_ptr = &mut *reader_ptr0;
+
+                let key = { reader_ptr.pull_value()? };
+
+                let reader_ptr1 = &mut *reader_ptr0;
+
+                let value = reader_ptr1.pull_value()?;
+
+                vec.push((key, value));
+            }
         }
 
         Ok(vec)

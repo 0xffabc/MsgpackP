@@ -1,5 +1,7 @@
 use anyhow::Result;
-use std::io::{Cursor, Write};
+use std::io::Write;
+
+use crate::reader::Reader;
 
 pub mod array;
 pub mod bin;
@@ -15,16 +17,15 @@ pub trait WriteTo {
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()>;
 }
 
-pub trait ReadFrom {
-    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self>
+pub trait ReadFrom<'a> {
+    fn read_from<T: AsRef<[u8]> + 'a>(packet_type: u8, reader: &'a mut Reader<T>) -> Result<Self>
     where
-        Self: Sized;
+        Self: 'a + Sized;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::reader::read_value_from_cursor;
     use crate::value::Value;
     use ordered_float::OrderedFloat;
 
@@ -40,7 +41,7 @@ mod tests {
     fn test_arrays() {
         let mut buffer = Vec::new();
 
-        let packet = vec![Value::U8(1), Value::Str("hai".to_string())];
+        let packet = vec![Value::U8(1), Value::Str("hai")];
 
         packet.write_to(&mut buffer).unwrap();
         assert_eq!(buffer, &[0x92, 0x01, 0xa3, b'h', b'a', b'i']);
@@ -51,10 +52,10 @@ mod tests {
         let mut buffer = Vec::new();
 
         let packet = vec![
-            Value::Str("sp".to_string()),
+            Value::Str("sp"),
             Value::Array(vec![Value::Map(vec![(
-                Value::Str("name".to_string()),
-                Value::Str("0xffabc".to_string()),
+                Value::Str("name"),
+                Value::Str("0xffabc"),
             )])]),
         ];
 
@@ -73,17 +74,17 @@ mod tests {
         let packet = vec![
             146, 162, 99, 104, 147, 165, 72, 101, 108, 108, 111, 1, 203, 63, 244, 204, 204, 204,
             204, 204, 205,
-        ]
-        .into_boxed_slice();
+        ];
 
-        let val = read_value_from_cursor(&mut Cursor::new(packet)).unwrap();
+        let mut reader = Reader::new(&packet);
+        let val = reader.pull_value().unwrap();
 
         assert_eq!(
             val,
             Value::Array(vec![
-                Value::Str("ch".to_string()),
+                Value::Str("ch"),
                 Value::Array(vec![
-                    Value::Str("Hello".to_string()),
+                    Value::Str("Hello"),
                     Value::U8(1),
                     Value::F64(OrderedFloat(1.3)),
                 ])
@@ -99,10 +100,10 @@ mod tests {
             116, 114, 105, 110, 103, 167, 102, 111, 111, 32, 98, 97, 114, 165, 97, 114, 114, 97,
             121, 146, 163, 102, 111, 111, 163, 98, 97, 114, 166, 111, 98, 106, 101, 99, 116, 130,
             163, 102, 111, 111, 1, 163, 98, 97, 122, 203, 63, 224, 0, 0, 0, 0, 0, 0,
-        ]
-        .into_boxed_slice();
+        ];
 
-        let val: Value = read_value_from_cursor(&mut Cursor::new(example)).unwrap();
+        let mut reader = Reader::new(&example);
+        let val = reader.pull_value().unwrap();
 
         assert_eq!(
             val,
