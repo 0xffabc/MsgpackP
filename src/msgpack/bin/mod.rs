@@ -27,7 +27,7 @@ impl WriteTo for Vec<u8> {
 
 impl ReadFrom for Vec<u8> {
     #[inline(always)]
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         let len = match packet_type {
             Families::BIN8 => {
                 let mut len_bytes = [0; 1];

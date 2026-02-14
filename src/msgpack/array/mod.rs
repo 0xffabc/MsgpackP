@@ -43,7 +43,7 @@ impl WriteTo for Vec<Value> {
 
 impl ReadFrom for Vec<Value> {
     #[inline(always)]
-    fn read_from(array_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(array_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         let array_length = match array_type {
             _ if ((0x90..=0x9f).contains(&array_type)) => (array_type - 0x90) as u32,
             Array::ARRAY_16_TYPE => {

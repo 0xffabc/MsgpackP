@@ -15,7 +15,7 @@ impl WriteTo for [u8; 1] {
 
 impl ReadFrom for [u8; 1] {
     #[inline(always)]
-    fn read_from(packet_type: u8, _reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(packet_type: u8, _reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         Ok([packet_type])
     }
 }
@@ -32,7 +32,7 @@ impl WriteTo for [u8; 2] {
 
 impl ReadFrom for [u8; 2] {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         let mut bytes = [0u8; 2];
         reader.read_exact(&mut bytes)?;
         Ok(bytes)
@@ -51,7 +51,7 @@ impl WriteTo for [u8; 4] {
 
 impl ReadFrom for [u8; 4] {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         let mut bytes = [0u8; 4];
         reader.read_exact(&mut bytes)?;
         Ok(bytes)
@@ -70,7 +70,7 @@ impl WriteTo for [u8; 8] {
 
 impl ReadFrom for [u8; 8] {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         let mut bytes = [0u8; 8];
         reader.read_exact(&mut bytes)?;
         Ok(bytes)
@@ -89,7 +89,7 @@ impl WriteTo for [u8; 16] {
 
 impl ReadFrom for [u8; 16] {
     #[inline(always)]
-    fn read_from(_packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(_packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         let mut bytes = [0u8; 16];
         reader.read_exact(&mut bytes)?;
         Ok(bytes)
@@ -130,7 +130,7 @@ impl WriteTo for Extension {
 
 impl ReadFrom for Extension {
     #[inline(always)]
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self> {
+    fn read_from(packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
         let mut data_len_buffer = [0u8; 4];
 
         reader.read_exact(&mut data_len_buffer)?;

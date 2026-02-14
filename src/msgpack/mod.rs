@@ -16,7 +16,7 @@ pub trait WriteTo {
 }
 
 pub trait ReadFrom {
-    fn read_from(packet_type: u8, reader: &mut Cursor<Vec<u8>>) -> Result<Self>
+    fn read_from(packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self>
     where
         Self: Sized;
 }
@@ -73,7 +73,8 @@ mod tests {
         let packet = vec![
             146, 162, 99, 104, 147, 165, 72, 101, 108, 108, 111, 1, 203, 63, 244, 204, 204, 204,
             204, 204, 205,
-        ];
+        ]
+        .into_boxed_slice();
 
         let val = read_value_from_cursor(&mut Cursor::new(packet)).unwrap();
 
@@ -98,7 +99,8 @@ mod tests {
             116, 114, 105, 110, 103, 167, 102, 111, 111, 32, 98, 97, 114, 165, 97, 114, 114, 97,
             121, 146, 163, 102, 111, 111, 163, 98, 97, 114, 166, 111, 98, 106, 101, 99, 116, 130,
             163, 102, 111, 111, 1, 163, 98, 97, 122, 203, 63, 224, 0, 0, 0, 0, 0, 0,
-        ];
+        ]
+        .into_boxed_slice();
 
         let val: Value = read_value_from_cursor(&mut Cursor::new(example)).unwrap();
 
