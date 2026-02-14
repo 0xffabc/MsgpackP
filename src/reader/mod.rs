@@ -68,7 +68,7 @@ fn classify_marker(packet_type: u8) -> Marker {
 }
 
 #[inline(always)]
-fn read_packet_type(reader: &mut Cursor<Box<[u8]>>) -> Result<u8> {
+fn read_packet_type<T: AsRef<[u8]>>(reader: &mut Cursor<T>) -> Result<u8> {
     let mut header = [0; 1];
 
     reader.read_exact(&mut header)?;
@@ -77,7 +77,7 @@ fn read_packet_type(reader: &mut Cursor<Box<[u8]>>) -> Result<u8> {
 }
 
 #[inline(always)]
-pub fn read_value_from_cursor(reader: &mut Cursor<Box<[u8]>>) -> Result<Value> {
+pub fn read_value_from_cursor<T: AsRef<[u8]>>(reader: &mut Cursor<T>) -> Result<Value> {
     let packet_type = read_packet_type(reader)?;
     let marker = classify_marker(packet_type);
 

@@ -16,7 +16,7 @@ pub trait WriteTo {
 }
 
 pub trait ReadFrom {
-    fn read_from(packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self>
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self>
     where
         Self: Sized;
 }

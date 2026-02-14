@@ -47,7 +47,7 @@ impl WriteTo for Vec<(Value, Value)> {
 
 impl ReadFrom for HashMap<Value, Value> {
     #[inline(always)]
-    fn read_from(packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
         let mut map = HashMap::new();
         let map_length = match packet_type {
             _ if ((Map::FIXMAP..(Map::FIXMAP + 0x0f)).contains(&packet_type)) => {
@@ -81,7 +81,7 @@ impl ReadFrom for HashMap<Value, Value> {
 
 impl ReadFrom for Vec<(Value, Value)> {
     #[inline(always)]
-    fn read_from(packet_type: u8, reader: &mut Cursor<Box<[u8]>>) -> Result<Self> {
+    fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Cursor<T>) -> Result<Self> {
         let mut vec = Vec::new();
         let vec_length = match packet_type {
             _ if ((Map::FIXMAP..(Map::FIXMAP + 0x0f)).contains(&packet_type)) => {

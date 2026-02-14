@@ -8,10 +8,10 @@ fn bench(c: &mut Criterion) {
 
     group.bench_function("Decode", |b| {
         b.iter(move || {
-            let packet: Box<[u8]> = Box::new([
-                146, 162, 99, 104, 147, 165, 72, 101, 108, 108, 111, 1, 203, 63, 244, 204, 204,
+            let packet = &[
+                146u8, 162, 99, 104, 147, 165, 72, 101, 108, 108, 111, 1, 203, 63, 244, 204, 204,
                 204, 204, 204, 205,
-            ]);
+            ];
 
             let mut cursor = Cursor::new(packet);
 
