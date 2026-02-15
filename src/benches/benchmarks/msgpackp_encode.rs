@@ -9,16 +9,17 @@ fn bench(c: &mut Criterion) {
     group.bench_function("Encode", |b| {
         let packet = vec![
             Value::Str("sp"),
-            Value::Array(vec![Value::Array(vec![
+            Value::Array(vec![Value::Map(vec![(
                 Value::Str("name"),
                 Value::Str("0xffabc"),
-            ])]),
+            )])]),
         ];
 
         b.iter(move || {
-            let mut buffer = Vec::new();
+            let mut buffer = [0u8; 70];
+            let mut slice = &mut buffer[..];
 
-            black_box(packet.write_to(&mut buffer).unwrap());
+            black_box(packet.write_to(&mut slice).unwrap());
         });
     });
 
