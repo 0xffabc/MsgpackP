@@ -22,14 +22,44 @@ impl WriteTo for Vec<(Value<'_>, Value<'_>)> {
         let map_length = self.len();
 
         match map_length {
+            /*
+             * Fixmap size is 15
+             *
+             * https://github.com/msgpack/msgpack/blob/master/spec.md#:~:text=1000xxxx-,0x80%20%2D%200x8f,-fixarray
+             */
             0..=15 => buffer.write_all(&[Map::FIXMAP + map_length as u8])?,
-            16..=65535 => {
+
+            /*
+             * map 16 stores a map whose length is upto (2^16)-1 elements
+             * +--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             * |  0xde  |YYYYYYYY|YYYYYYYY|   N*2 objects   |
+             * +--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             */
+            16..=65534 => {
                 buffer.write_all(&[Map::MAP_16_TYPE])?;
                 buffer.write_all(&map_length.to_be_bytes())?
             }
-            _ => {
+
+            /*
+             * map 32 stores a map whose length is upto (2^32)-1 elements
+             * +--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             * |  0xdf  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|   N*2 objects   |
+             * +--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             */
+            65535..4294967295 => {
                 buffer.write_all(&[Map::MAP_32_TYPE])?;
                 buffer.write_all(&map_length.to_be_bytes())?
+            }
+
+            /*
+             * Msgpack doesn't support map64.
+             *
+             * However you can make an extension if you need it.
+             */
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "MAP64 is not supported in msgpack. Consider making an extension instead."
+                ));
             }
         }
 
@@ -46,34 +76,70 @@ impl<'a> ReadFrom<'a> for Vec<(Value<'a>, Value<'a>)> {
     #[inline(always)]
     fn read_from<U: AsRef<[u8]> + 'a>(packet_type: u8, reader: &'a mut Reader<U>) -> Result<Self> {
         let vec_length = match packet_type {
-            _ if ((Map::FIXMAP..(Map::FIXMAP + 0x0f)).contains(&packet_type)) => {
-                packet_type as usize - Map::FIXMAP as usize
-            }
+            /*
+             * Fixmap ranges from 0x80 to 0x8f:
+             *
+             * https://github.com/msgpack/msgpack/blob/master/spec.md#map-format-family:~:text=1000xxxx-,0x80%20%2D%200x8f,-fixarray
+             */
+            0x80..0x8f => packet_type as usize - Map::FIXMAP as usize,
+
+            /*
+             * map 16 stores a map whose length is upto (2^16)-1 elements
+             * +--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             * |  0xde  |YYYYYYYY|YYYYYYYY|   N*2 objects   |
+             * +--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             */
             Map::MAP_16_TYPE => {
                 let buffer = reader.pull(2)?;
 
                 u16::from_be_bytes([buffer[0], buffer[1]]) as usize
             }
+
+            /*
+             * map 32 stores a map whose length is upto (2^32)-1 elements
+             * +--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             * |  0xdf  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|   N*2 objects   |
+             * +--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+             */
             Map::MAP_32_TYPE => {
                 let buffer = reader.pull(4)?;
 
                 u32::from_be_bytes([buffer[0], buffer[1], buffer[2], buffer[3]]) as usize
             }
-            _ => return Ok(Vec::new()),
+
+            /*
+             * Do not read.
+             */
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "Failed to read MAP64. The serializer knows something I don't possess."
+                ));
+            }
         };
 
-        let mut vec = Vec::with_capacity(vec_length);
+        /*
+         * Prevent people from allocating 4GB
+         */
+        if vec_length > 100usize {
+            return Err(anyhow::anyhow!(
+                "A map size of 100??? This is VERY unrealistic for moomoo.io"
+            ));
+        }
+
+        /*
+         * Note: DO NOT USE with_capacity!
+         *
+         * Preemptive allocations slow down everything **4 times**
+         */
+
+        let mut vec: Vec<(Value, Value)> = Vec::new();
+
+        let reader_ptr0 = reader as *mut Reader<U>;
 
         for _ in 0..vec_length {
             unsafe {
-                let reader_ptr0 = reader as *mut Reader<U> as *mut Reader<U>;
-                let reader_ptr = &mut *reader_ptr0;
-
-                let key = { reader_ptr.pull_value()? };
-
-                let reader_ptr1 = &mut *reader_ptr0;
-
-                let value = reader_ptr1.pull_value()?;
+                let key = (&mut *reader_ptr0).pull_value()?;
+                let value = (&mut *reader_ptr0).pull_value()?;
 
                 vec.push((key, value));
             }

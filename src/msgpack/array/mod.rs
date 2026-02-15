@@ -18,19 +18,38 @@ impl Array {
 
 impl WriteTo for Vec<Value<'_>> {
     #[inline(always)]
+    /**
+     * @name write_to
+     * @description
+     *
+     * Implements an Array writer
+     */
     fn write_to<U: Write>(&self, buffer: &mut U) -> Result<()> {
         let array_length = self.len();
 
         match array_length {
+            /*
+             * Fixarr size is 15
+             */
             0..=15 => buffer.write_all(&[Array::FIXARRAY_TYPE + array_length as u8])?,
-            16..=65535 => {
+
+            /*
+             * Arr16 size is u16-1
+             */
+            16..=65534 => {
                 buffer.write_all(&[Array::ARRAY_16_TYPE])?;
                 buffer.write_all(&array_length.to_be_bytes())?
             }
-            _ => {
+
+            /*
+             * Arr32 size is u32-1
+             */
+            65535..4294967295 => {
                 buffer.write_all(&[Array::ARRAY_32_TYPE])?;
                 buffer.write_all(&array_length.to_be_bytes())?
             }
+
+            _ => return Err(anyhow::anyhow!("Arr64 is not supported by msgpack")),
         }
 
         for value in self {
@@ -45,26 +64,60 @@ impl<'a> ReadFrom<'a> for Vec<Value<'a>> {
     #[inline(always)]
     fn read_from<U: AsRef<[u8]> + 'a>(array_type: u8, reader: &'a mut Reader<U>) -> Result<Self> {
         let array_length = match array_type {
-            _ if ((0x90..=0x9f).contains(&array_type)) => (array_type - 0x90) as u32,
+            /*
+             * Fixarr ranges from 0x90 to 0x9f
+             *
+             * https://github.com/msgpack/msgpack/blob/master/spec.md#map-format-family:~:text=1001xxxx-,0x90%20%2D%200x9f,-fixstr
+             */
+            0x90..=0x9f => (array_type - 0x90) as usize,
+
+            /*
+             * Arr16
+             */
             Array::ARRAY_16_TYPE => {
                 let bytes = reader.pull(2)?;
-                u16::from_be_bytes([bytes[0], bytes[1]]) as u32
+
+                /*
+                 * array 16 stores an array whose length is upto (2^16)-1 elements:
+                 * +--------+--------+--------+~~~~~~~~~~~~~~~~~+
+                 * |  0xdc  |YYYYYYYY|YYYYYYYY|    N objects    |
+                 * +--------+--------+--------+~~~~~~~~~~~~~~~~~+
+                 */
+
+                u16::from_be_bytes([bytes[0], bytes[1]]) as usize
             }
+
+            /*
+             * Arr32
+             */
             Array::ARRAY_32_TYPE => {
                 let bytes = reader.pull(4)?;
-                u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])
+
+                /*
+                 * array 32 stores an array whose length is upto (2^32)-1 elements:
+                 * +--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+                 * |  0xdd  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|    N objects    |
+                 * +--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+                 */
+
+                u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize
             }
             _ => return Ok(Vec::new()),
         };
 
-        let mut values = Vec::with_capacity(array_length as usize);
+        /*
+         * Note: DO NOT USE with_capacity!
+         *
+         * Preemptive allocations slow down everything **4 times**
+         */
+
+        let mut values = Vec::new();
+
+        let reader_ptr0 = reader as *mut Reader<U>;
 
         for _ in 0..array_length {
             unsafe {
-                let reader_ptr = reader as *mut Reader<U> as *mut Reader<U>;
-                let reader_ptr = &mut *reader_ptr;
-
-                values.push(reader_ptr.pull_value().unwrap_or(Value::Nil));
+                values.push((&mut *reader_ptr0).pull_value()?);
             }
         }
 

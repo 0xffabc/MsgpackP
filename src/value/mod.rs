@@ -34,6 +34,13 @@ impl<'a> Value<'a> {
         Value::Nil
     }
 
+    /**
+     * @name bin
+     * @description According to msgpack spec, Extension is built
+     * from a Vec<u8>
+     *
+     * I assume that moomoo.io's server doesn't use any extensions whatsoever.
+     */
     #[inline(always)]
     pub fn bin(value: Vec<u8>) -> Self {
         Value::Extension(Extension::new(Families::BIN8, value))
@@ -94,6 +101,14 @@ impl<'a> Value<'a> {
         Value::I64(value)
     }
 
+    /**
+     * @name str
+     * @description
+     *
+     * Important note: You likely don't want to make a `str` reference that points
+     * to local variable, since it would trigger the borrow checker,
+     * so obviously pull the strings from the buffer you were given.
+     */
     #[inline(always)]
     pub fn str(value: &'a str) -> Self {
         Value::Str(value)
@@ -116,6 +131,12 @@ impl<'a> Value<'a> {
 }
 
 impl fmt::Display for Value<'_> {
+    /**
+     * @name fmt
+     * @description
+     *
+     * Debugging utilities
+     */
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Value::Nil => write!(f, "null"),

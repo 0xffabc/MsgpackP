@@ -13,10 +13,24 @@ pub mod map;
 pub mod null;
 pub mod string;
 
+/**
+ * @name WriteTo
+ * @description
+ *
+ * Writer trait for msgpack values.
+ */
 pub trait WriteTo {
     fn write_to<U: Write>(&self, writer: &mut U) -> Result<()>;
 }
 
+/**
+ * @name WriteTo
+ * @description
+ *
+ * Reader trait for msgpack values.
+ *
+ * Read_from MUST be somewhat close to being zero-copy.
+ */
 pub trait ReadFrom<'a> {
     fn read_from<T: AsRef<[u8]> + 'a>(packet_type: u8, reader: &'a mut Reader<T>) -> Result<Self>
     where

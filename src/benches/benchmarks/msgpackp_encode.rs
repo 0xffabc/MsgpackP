@@ -9,10 +9,10 @@ fn bench(c: &mut Criterion) {
     group.bench_function("Encode", |b| {
         let packet = vec![
             Value::Str("sp"),
-            Value::Array(vec![Value::Map(vec![(
+            Value::Array(vec![Value::Array(vec![
                 Value::Str("name"),
                 Value::Str("0xffabc"),
-            )])]),
+            ])]),
         ];
 
         b.iter(move || {
