@@ -6,14 +6,17 @@ The author thinks that safety can be traded for performance in some specific cas
 
 ## Serialization
 
-```
+```rust
 let packet = vec![
-        Value::Str("sp"),
-        Value::Array(vec![Value::Map(vec![(
-            Value::Str("name"),
-            Value::Str("0xffabc"),
-        )])]),
-    ];
+            Value::Str("sp"),
+            Value::Array(
+                vec![Value::Map(
+                    vec![(Value::Str("name"), Value::Str("0xffabc"))].into_boxed_slice(),
+                )]
+                .into_boxed_slice(),
+            ),
+        ]
+        .into_boxed_slice();
 
     let mut buffer = [0u8; 70];
     let mut slice = &mut buffer[..];
@@ -24,7 +27,8 @@ let packet = vec![
 Where write_to accepts anything that implements Write
 
 ## Deserialization
-```
+
+```rust
 let packet = &[
   135, 163, 105, 110, 116, 1, 165, 102, 108, 111, 97, 116, 203, 63, 224, 0, 0, 0, 0,
   0, 0, 167, 98, 111, 111, 108, 101, 97, 110, 195, 164, 110, 117, 108, 108, 192, 166,

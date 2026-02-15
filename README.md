@@ -19,39 +19,38 @@ cargo build
 Serialize with
 
 ```rust
-let mut buffer = Vec::new();
-
 let packet = vec![
-    Value::Str("sp"),
-    Value::Array(vec![Value::Map(vec![(
-        Value::Str("name"),
-        Value::Str("0xffabc"),
-    )])]),
-];
+            Value::Str("sp"),
+            Value::Array(
+                vec![Value::Map(
+                    vec![(Value::Str("name"), Value::Str("0xffabc"))].into_boxed_slice(),
+                )]
+                .into_boxed_slice(),
+            ),
+        ]
+        .into_boxed_slice();
 
-packet.write_to(&mut buffer)?;
+    let mut buffer = [0u8; 70];
+    let mut slice = &mut buffer[..];
+
+    packet.write_to(&mut slice).unwrap();
 ```
 
 Deserialize with
 
 ```rust
-let packet = vec![
-    146, 162, 99, 104, 147, 165, 72, 101, 108, 108, 111, 1, 203, 63, 244, 204, 204, 204,
-    204, 204, 205,
+let packet = &[
+  135, 163, 105, 110, 116, 1, 165, 102, 108, 111, 97, 116, 203, 63, 224, 0, 0, 0, 0,
+  0, 0, 167, 98, 111, 111, 108, 101, 97, 110, 195, 164, 110, 117, 108, 108, 192, 166,
+  115, 116, 114, 105, 110, 103, 167, 102, 111, 111, 32, 98, 97, 114, 165, 97, 114,
+  114, 97, 121, 146, 163, 102, 111, 111, 163, 98, 97, 114, 166, 111, 98, 106, 101,
+  99, 116, 130, 163, 102, 111, 111, 1, 163, 98, 97, 122, 203, 63, 224, 0, 0, 0, 0, 0,
+  0,
 ];
 
-let mut reader = Reader::new(&packet);
-let val = reader.pull_value()?;
+let mut reader = Reader::new(packet);
 
-assert_eq!(
-            val,
-            Value::Array(vec![
-                Value::Str("ch"),
-                Value::Array(vec![
-                    Value::Str("Hello"),
-                    Value::U8(1),
-                    Value::F64(OrderedFloat(1.3)),
-                ])
-            ])
-        );
+let value = reader.pull_value();
+
+println!("{value}");
 ```
