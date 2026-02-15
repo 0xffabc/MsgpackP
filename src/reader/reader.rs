@@ -37,9 +37,9 @@ impl<R: AsRef<[u8]>> Reader<R> {
 
         Ok(match packet_type {
             /* Array */
-            0x90..0x9f => Value::array(Vec::<Value>::read_from(packet_type, self)?),
+            0x90..0x9f => Value::array(Box::<[Value]>::read_from(packet_type, self)?),
             Array::ARRAY_16_TYPE | Array::ARRAY_32_TYPE => {
-                Value::array(Vec::<Value>::read_from(packet_type, self)?)
+                Value::array(Box::<[Value]>::read_from(packet_type, self)?)
             }
 
             /* String */
@@ -55,9 +55,9 @@ impl<R: AsRef<[u8]>> Reader<R> {
             0xe0..=0xff => Value::i8(i8::read_from(packet_type, self)?),
 
             /* Map */
-            0x80..0x8f => Value::map(Vec::<(Value, Value)>::read_from(packet_type, self)?),
+            0x80..0x8f => Value::map(Box::<[(Value, Value)]>::read_from(packet_type, self)?),
             Families::MAP16 | Families::MAP32 => {
-                Value::map(Vec::<(Value, Value)>::read_from(packet_type, self)?)
+                Value::map(Box::<[(Value, Value)]>::read_from(packet_type, self)?)
             }
 
             /* Float */

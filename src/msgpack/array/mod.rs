@@ -16,7 +16,7 @@ impl Array {
     pub const FIXARRAY_TYPE: u8 = 0x90;
 }
 
-impl WriteTo for Vec<Value<'_>> {
+impl WriteTo for Box<[Value<'_>]> {
     #[inline(always)]
     /**
      * @name write_to
@@ -60,7 +60,7 @@ impl WriteTo for Vec<Value<'_>> {
     }
 }
 
-impl<'a> ReadFrom<'a> for Vec<Value<'a>> {
+impl<'a> ReadFrom<'a> for Box<[Value<'a>]> {
     #[inline(always)]
     fn read_from<U: AsRef<[u8]> + 'a>(array_type: u8, reader: &'a mut Reader<U>) -> Result<Self> {
         let array_length = match array_type {
@@ -102,7 +102,7 @@ impl<'a> ReadFrom<'a> for Vec<Value<'a>> {
 
                 u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize
             }
-            _ => return Ok(Vec::new()),
+            _ => return Ok(vec![].into_boxed_slice()),
         };
 
         /*
@@ -111,16 +111,18 @@ impl<'a> ReadFrom<'a> for Vec<Value<'a>> {
          * Preemptive allocations slow down everything **4 times**
          */
 
-        let mut values = Vec::new();
+        let mut uninit = Box::<[Value]>::new_uninit_slice(array_length);
 
-        let reader_ptr0 = reader as *mut Reader<U>;
+        unsafe {
+            let reader_ptr = reader as *mut Reader<U>;
 
-        for _ in 0..array_length {
-            unsafe {
-                values.push((&mut *reader_ptr0).pull_value()?);
+            for i in 0..array_length {
+                uninit[i].write((&mut *reader_ptr).pull_value()?);
             }
-        }
 
-        Ok(values)
+            let values = uninit.assume_init();
+
+            Ok(values)
+        }
     }
 }

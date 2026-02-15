@@ -16,7 +16,7 @@ impl Map {
     pub const MAP_32_TYPE: u8 = 0xdf;
 }
 
-impl WriteTo for Vec<(Value<'_>, Value<'_>)> {
+impl WriteTo for Box<[(Value<'_>, Value<'_>)]> {
     #[inline(always)]
     fn write_to<U: Write>(&self, buffer: &mut U) -> Result<()> {
         let map_length = self.len();
@@ -72,10 +72,10 @@ impl WriteTo for Vec<(Value<'_>, Value<'_>)> {
     }
 }
 
-impl<'a> ReadFrom<'a> for Vec<(Value<'a>, Value<'a>)> {
+impl<'a> ReadFrom<'a> for Box<[(Value<'a>, Value<'a>)]> {
     #[inline(always)]
     fn read_from<U: AsRef<[u8]> + 'a>(packet_type: u8, reader: &'a mut Reader<U>) -> Result<Self> {
-        let vec_length = match packet_type {
+        let map_length = match packet_type {
             /*
              * Fixmap ranges from 0x80 to 0x8f:
              *
@@ -120,7 +120,7 @@ impl<'a> ReadFrom<'a> for Vec<(Value<'a>, Value<'a>)> {
         /*
          * Prevent people from allocating 4GB
          */
-        if vec_length > 100usize {
+        if map_length > 100usize {
             return Err(anyhow::anyhow!(
                 "A map size of 100??? This is VERY unrealistic for moomoo.io"
             ));
@@ -132,19 +132,19 @@ impl<'a> ReadFrom<'a> for Vec<(Value<'a>, Value<'a>)> {
          * Preemptive allocations slow down everything **4 times**
          */
 
-        let mut vec: Vec<(Value, Value)> = Vec::new();
+        let mut uninit = Box::<[(Value, Value)]>::new_uninit_slice(map_length);
 
         let reader_ptr0 = reader as *mut Reader<U>;
 
-        for _ in 0..vec_length {
-            unsafe {
+        unsafe {
+            for i in 0..map_length {
                 let key = (&mut *reader_ptr0).pull_value()?;
                 let value = (&mut *reader_ptr0).pull_value()?;
 
-                vec.push((key, value));
+                uninit[i].write((key, value));
             }
-        }
 
-        Ok(vec)
+            Ok(uninit.assume_init())
+        }
     }
 }

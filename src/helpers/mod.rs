@@ -1,3 +1,5 @@
+pub mod boxed;
+
 #[macro_export]
 macro_rules! array {
     (($($value:expr),*)) => {{

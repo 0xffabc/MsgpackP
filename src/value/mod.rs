@@ -23,8 +23,8 @@ pub enum Value<'a> {
     I32(i32),
     I64(i64),
     Str(&'a str),
-    Array(Vec<Value<'a>>),
-    Map(Vec<(Value<'a>, Value<'a>)>),
+    Array(Box<[Value<'a>]>),
+    Map(Box<[(Value<'a>, Value<'a>)]>),
     Extension(Extension),
 }
 
@@ -115,12 +115,12 @@ impl<'a> Value<'a> {
     }
 
     #[inline(always)]
-    pub fn array(value: Vec<Value<'a>>) -> Self {
+    pub fn array(value: Box<[Value<'a>]>) -> Self {
         Value::Array(value)
     }
 
     #[inline(always)]
-    pub fn map(value: Vec<(Value<'a>, Value<'a>)>) -> Self {
+    pub fn map(value: Box<[(Value<'a>, Value<'a>)]>) -> Self {
         Value::Map(value)
     }
 

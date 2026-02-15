@@ -55,9 +55,10 @@ mod tests {
     fn test_arrays() {
         let mut buffer = Vec::new();
 
-        let packet = vec![Value::U8(1), Value::Str("hai")];
+        let packet = vec![Value::U8(1), Value::Str("hai")].into_boxed_slice();
 
         packet.write_to(&mut buffer).unwrap();
+
         assert_eq!(buffer, &[0x92, 0x01, 0xa3, b'h', b'a', b'i']);
     }
 
@@ -67,13 +68,17 @@ mod tests {
 
         let packet = vec![
             Value::Str("sp"),
-            Value::Array(vec![Value::Map(vec![(
-                Value::Str("name"),
-                Value::Str("0xffabc"),
-            )])]),
-        ];
+            Value::Array(
+                vec![Value::Map(
+                    vec![(Value::Str("name"), Value::Str("0xffabc"))].into_boxed_slice(),
+                )]
+                .into_boxed_slice(),
+            ),
+        ]
+        .into_boxed_slice();
 
         packet.write_to(&mut buffer).unwrap();
+
         assert_eq!(
             buffer,
             &[
@@ -95,14 +100,20 @@ mod tests {
 
         assert_eq!(
             val,
-            Value::Array(vec![
-                Value::Str("ch"),
-                Value::Array(vec![
-                    Value::Str("Hello"),
-                    Value::U8(1),
-                    Value::F64(OrderedFloat(1.3)),
-                ])
-            ])
+            Value::Array(
+                vec![
+                    Value::Str("ch"),
+                    Value::Array(
+                        vec![
+                            Value::Str("Hello"),
+                            Value::U8(1),
+                            Value::F64(OrderedFloat(1.3)),
+                        ]
+                        .into_boxed_slice()
+                    )
+                ]
+                .into_boxed_slice()
+            )
         );
     }
 
@@ -121,24 +132,30 @@ mod tests {
 
         assert_eq!(
             val,
-            Value::Map(vec![
-                (Value::str("int"), Value::u8(1)),
-                (Value::str("float"), Value::f64(OrderedFloat(0.5))),
-                (Value::str("boolean"), Value::bool(true)),
-                (Value::str("null"), Value::Nil),
-                (Value::str("string"), Value::str("foo bar")),
-                (
-                    Value::str("array"),
-                    Value::Array(vec![Value::str("foo"), Value::str("bar")])
-                ),
-                (
-                    Value::str("object"),
-                    Value::Map(vec![
-                        (Value::str("foo"), Value::u8(1)),
-                        (Value::str("baz"), Value::f64(OrderedFloat(0.5))),
-                    ])
-                )
-            ])
+            Value::Map(
+                vec![
+                    (Value::str("int"), Value::u8(1)),
+                    (Value::str("float"), Value::f64(OrderedFloat(0.5))),
+                    (Value::str("boolean"), Value::bool(true)),
+                    (Value::str("null"), Value::Nil),
+                    (Value::str("string"), Value::str("foo bar")),
+                    (
+                        Value::str("array"),
+                        Value::Array(vec![Value::str("foo"), Value::str("bar")].into_boxed_slice())
+                    ),
+                    (
+                        Value::str("object"),
+                        Value::Map(
+                            vec![
+                                (Value::str("foo"), Value::u8(1)),
+                                (Value::str("baz"), Value::f64(OrderedFloat(0.5))),
+                            ]
+                            .into_boxed_slice()
+                        )
+                    )
+                ]
+                .into_boxed_slice()
+            )
         );
     }
 }
