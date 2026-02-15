@@ -37,16 +37,24 @@ impl WriteTo for Box<[Value<'_>]> {
              * Arr16 size is u16-1
              */
             16..=65534 => {
-                buffer.write_all(&[Array::ARRAY_16_TYPE])?;
-                buffer.write_all(&array_length.to_be_bytes())?
+                let length = array_length.to_be_bytes();
+
+                buffer.write_all(&[Array::ARRAY_16_TYPE, length[0], length[1]])?;
             }
 
             /*
              * Arr32 size is u32-1
              */
             65535..4294967295 => {
-                buffer.write_all(&[Array::ARRAY_32_TYPE])?;
-                buffer.write_all(&array_length.to_be_bytes())?
+                let length = array_length.to_be_bytes();
+
+                buffer.write_all(&[
+                    Array::ARRAY_32_TYPE,
+                    length[0],
+                    length[1],
+                    length[2],
+                    length[3],
+                ])?;
             }
 
             _ => return Err(anyhow::anyhow!("Arr64 is not supported by msgpack")),
