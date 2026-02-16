@@ -1,4 +1,6 @@
-# Currently undergoing major changes
+# MSgpackP
+
+An **unsafe** and fast msgpack implementation
 
 > [!WARNING]
 > 
