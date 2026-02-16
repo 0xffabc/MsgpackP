@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, mem::MaybeUninit};
 
 use anyhow::Result;
 
@@ -83,7 +83,13 @@ impl<'a> ReadFrom<'a> for Box<[Value<'a>]> {
              * Arr16
              */
             Array::ARRAY_16_TYPE => {
-                let bytes = reader.pull(2)?;
+                let bytes = reader.pull(2);
+
+                if bytes.len() != 2 {
+                    return Err(anyhow::anyhow!(
+                        "I have no idea how to read a Array16 from this!"
+                    ));
+                }
 
                 /*
                  * array 16 stores an array whose length is upto (2^16)-1 elements:
@@ -99,7 +105,13 @@ impl<'a> ReadFrom<'a> for Box<[Value<'a>]> {
              * Arr32
              */
             Array::ARRAY_32_TYPE => {
-                let bytes = reader.pull(4)?;
+                let bytes = reader.pull(4);
+
+                if bytes.len() != 4 {
+                    return Err(anyhow::anyhow!(
+                        "I have no idea how to read a Array32 from this!"
+                    ));
+                }
 
                 /*
                  * array 32 stores an array whose length is upto (2^32)-1 elements:
@@ -123,9 +135,28 @@ impl<'a> ReadFrom<'a> for Box<[Value<'a>]> {
 
         unsafe {
             let reader_ptr = reader as *mut Reader<U>;
+            let ptr = uninit.as_mut_ptr();
 
-            for i in 0..array_length {
-                uninit[i].write((&mut *reader_ptr).pull_value()?);
+            let mut i = 0;
+
+            while i + 4 < array_length {
+                ptr.add(i)
+                    .write(MaybeUninit::new((&mut *reader_ptr).pull_value()?));
+                ptr.add(i + 1)
+                    .write(MaybeUninit::new((&mut *reader_ptr).pull_value()?));
+                ptr.add(i + 2)
+                    .write(MaybeUninit::new((&mut *reader_ptr).pull_value()?));
+                ptr.add(i + 3)
+                    .write(MaybeUninit::new((&mut *reader_ptr).pull_value()?));
+
+                i += 4;
+            }
+
+            while i < array_length {
+                ptr.add(i)
+                    .write(MaybeUninit::new((&mut *reader_ptr).pull_value()?));
+
+                i += 1;
             }
 
             let values = uninit.assume_init();

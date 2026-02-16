@@ -33,7 +33,7 @@ impl<R: AsRef<[u8]>> Reader<R> {
      * Reads a certain value from inner byte slice.
      */
     pub fn pull_value<'a>(&'a mut self) -> Result<Value<'a>> {
-        let packet_type = self.pull(1)?[0];
+        let packet_type = self.pull(1)[0];
 
         Ok(match packet_type {
             /* Array */
@@ -124,13 +124,17 @@ impl<R: AsRef<[u8]>> Reader<R> {
             /*
              * 1 byte per u8
              */
-            Families::STR8 => self.pull(1).unwrap_or(&[0])[0] as usize,
+            Families::STR8 => self.pull(1)[0] as usize,
 
             /*
              * 2 bytes per u16
              */
             Families::STR16 => {
-                let bytes = self.pull(2).unwrap_or(&[0; 2]);
+                let bytes = self.pull(2);
+
+                if bytes.len() != 2 {
+                    return "";
+                }
 
                 u16::from_be_bytes([bytes[0], bytes[1]]) as usize
             }
@@ -139,7 +143,11 @@ impl<R: AsRef<[u8]>> Reader<R> {
              * 4 bytes per u32
              */
             Families::STR32 => {
-                let bytes = self.pull(4).unwrap_or(&[0; 4]);
+                let bytes = self.pull(4);
+
+                if bytes.len() != 4 {
+                    return "";
+                }
 
                 u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize
             }
@@ -154,7 +162,7 @@ impl<R: AsRef<[u8]>> Reader<R> {
             _ => 1usize,
         };
 
-        std::str::from_utf8(self.pull(len).unwrap_or(&[])).unwrap_or("")
+        std::str::from_utf8(self.pull(len)).unwrap_or("")
     }
 
     /**
@@ -165,17 +173,8 @@ impl<R: AsRef<[u8]>> Reader<R> {
      * Safe as long as everything is aligned properly.
      */
     #[inline(always)]
-    pub fn pull<'a>(&'a mut self, len: usize) -> Result<&'a [u8]> {
+    pub fn pull<'a>(&'a mut self, len: usize) -> &'a [u8] {
         let bytes = self.read.as_ref();
-        let index = self.index + len;
-
-        /*
-         *
-         * TODO: Switch to std::hint::unlikely when it stabilizes.
-         */
-        if index > bytes.len() {
-            return Err(anyhow::anyhow!("EOF. Do inappropriate things to me"));
-        }
 
         unsafe {
             /*
@@ -190,7 +189,7 @@ impl<R: AsRef<[u8]>> Reader<R> {
 
             self.index += len;
 
-            Ok(std::slice::from_raw_parts(ptr, len))
+            std::slice::from_raw_parts(ptr, len)
         }
     }
 }

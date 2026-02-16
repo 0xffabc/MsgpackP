@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, mem::MaybeUninit};
 
 use anyhow::Result;
 
@@ -90,7 +90,13 @@ impl<'a> ReadFrom<'a> for Box<[(Value<'a>, Value<'a>)]> {
              * +--------+--------+--------+~~~~~~~~~~~~~~~~~+
              */
             Map::MAP_16_TYPE => {
-                let buffer = reader.pull(2)?;
+                let buffer = reader.pull(2);
+
+                if buffer.len() != 2 {
+                    return Err(anyhow::anyhow!(
+                        "I have no idea how to read a MAP16 from this!"
+                    ));
+                }
 
                 u16::from_be_bytes([buffer[0], buffer[1]]) as usize
             }
@@ -102,7 +108,13 @@ impl<'a> ReadFrom<'a> for Box<[(Value<'a>, Value<'a>)]> {
              * +--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
              */
             Map::MAP_32_TYPE => {
-                let buffer = reader.pull(4)?;
+                let buffer = reader.pull(4);
+
+                if buffer.len() != 4 {
+                    return Err(anyhow::anyhow!(
+                        "I have no idea how to read a MAP32 from this!"
+                    ));
+                }
 
                 u32::from_be_bytes([buffer[0], buffer[1], buffer[2], buffer[3]]) as usize
             }
@@ -133,15 +145,44 @@ impl<'a> ReadFrom<'a> for Box<[(Value<'a>, Value<'a>)]> {
          */
 
         let mut uninit = Box::<[(Value, Value)]>::new_uninit_slice(map_length);
+        let ptr = uninit.as_mut_ptr();
 
         let reader_ptr0 = reader as *mut Reader<U>;
 
         unsafe {
-            for i in 0..map_length {
-                let key = (&mut *reader_ptr0).pull_value()?;
-                let value = (&mut *reader_ptr0).pull_value()?;
+            let mut i = 0;
 
-                uninit[i].write((key, value));
+            while i + 4 < map_length {
+                ptr.add(i).write(MaybeUninit::new((
+                    (&mut *reader_ptr0).pull_value()?,
+                    (&mut *reader_ptr0).pull_value()?,
+                )));
+
+                ptr.add(i + 1).write(MaybeUninit::new((
+                    (&mut *reader_ptr0).pull_value()?,
+                    (&mut *reader_ptr0).pull_value()?,
+                )));
+
+                ptr.add(i + 2).write(MaybeUninit::new((
+                    (&mut *reader_ptr0).pull_value()?,
+                    (&mut *reader_ptr0).pull_value()?,
+                )));
+
+                ptr.add(i + 3).write(MaybeUninit::new((
+                    (&mut *reader_ptr0).pull_value()?,
+                    (&mut *reader_ptr0).pull_value()?,
+                )));
+
+                i += 4;
+            }
+
+            while i < map_length {
+                ptr.add(i).write(MaybeUninit::new((
+                    (&mut *reader_ptr0).pull_value()?,
+                    (&mut *reader_ptr0).pull_value()?,
+                )));
+
+                i += 1;
             }
 
             Ok(uninit.assume_init())

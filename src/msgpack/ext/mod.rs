@@ -34,7 +34,14 @@ impl WriteTo for [u8; 2] {
 impl<'a> ReadFrom<'a> for [u8; 2] {
     #[inline(always)]
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(2)?;
+        let bytes = reader.pull(2);
+
+        if bytes.len() != 2 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an EXT16 from this!"
+            ));
+        }
+
         Ok([bytes[0], bytes[1]])
     }
 }
@@ -52,7 +59,14 @@ impl WriteTo for [u8; 4] {
 impl<'a> ReadFrom<'a> for [u8; 4] {
     #[inline(always)]
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(4)?;
+        let bytes = reader.pull(4);
+
+        if bytes.len() != 4 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an EXT4 from this!"
+            ));
+        }
+
         Ok([bytes[0], bytes[1], bytes[2], bytes[3]])
     }
 }
@@ -70,7 +84,14 @@ impl WriteTo for [u8; 8] {
 impl<'a> ReadFrom<'a> for [u8; 8] {
     #[inline(always)]
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(8)?;
+        let bytes = reader.pull(8);
+
+        if bytes.len() != 8 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an EXT64 from this!"
+            ));
+        }
+
         Ok([
             bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
         ])
@@ -90,7 +111,14 @@ impl WriteTo for [u8; 16] {
 impl<'a> ReadFrom<'a> for [u8; 16] {
     #[inline(always)]
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(16)?;
+        let bytes = reader.pull(16);
+
+        if bytes.len() != 16 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an EXT128 from this!"
+            ));
+        }
+
         Ok([
             bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
             bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15],
@@ -139,9 +167,16 @@ impl WriteTo for Extension {
 impl<'a> ReadFrom<'a> for Extension {
     #[inline(always)]
     fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(4)?;
+        let bytes = reader.pull(4);
+
+        if bytes.len() != 4 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an Extension from this!"
+            ));
+        }
+
         let data_len = u32::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
-        let data = reader.pull(data_len)?.to_vec();
+        let data = reader.pull(data_len).to_vec();
 
         Ok(Extension {
             type_: packet_type,

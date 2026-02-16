@@ -73,7 +73,13 @@ impl<'a> ReadFrom<'a> for u16 {
      * Reads a u16 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let byte = reader.pull(2)?;
+        let byte = reader.pull(2);
+
+        if byte.len() != 2 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read a U16 from this!"
+            ));
+        }
 
         Ok(u16::from_be_bytes([byte[0], byte[1]]))
     }
@@ -112,7 +118,13 @@ impl<'a> ReadFrom<'a> for u32 {
      * Reads a u32 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let byte = reader.pull(4)?;
+        let byte = reader.pull(4);
+
+        if byte.len() != 4 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read a U32 from this!"
+            ));
+        }
 
         Ok(u32::from_be_bytes([byte[0], byte[1], byte[2], byte[3]]))
     }
@@ -161,7 +173,13 @@ impl<'a> ReadFrom<'a> for u64 {
      * Reads a u64 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let byte = reader.pull(8)?;
+        let byte = reader.pull(8);
+
+        if byte.len() != 8 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read a U64 from this!"
+            ));
+        }
 
         Ok(u64::from_be_bytes([
             byte[0], byte[1], byte[2], byte[3], byte[4], byte[5], byte[6], byte[7],
@@ -226,7 +244,7 @@ impl<'a> ReadFrom<'a> for i8 {
          * +--------+--------+
          */
 
-        let byte = reader.pull(1)?;
+        let byte = reader.pull(1);
 
         Ok(i8::from_be_bytes([byte[0]]))
     }
@@ -265,7 +283,13 @@ impl<'a> ReadFrom<'a> for i16 {
      * Reads an i16 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(2)?;
+        let bytes = reader.pull(2);
+
+        if bytes.len() != 2 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an I16 from this!"
+            ));
+        }
 
         /*
          * int 16 stores a 16-bit big-endian signed integer
@@ -311,7 +335,13 @@ impl<'a> ReadFrom<'a> for i32 {
      * Reads an i32 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(4)?;
+        let bytes = reader.pull(4);
+
+        if bytes.len() != 4 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an I32 from this!"
+            ));
+        }
 
         /*
          * int 32 stores a 32-bit big-endian signed integer
@@ -367,7 +397,13 @@ impl<'a> ReadFrom<'a> for i64 {
      * Reads an i64 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(8)?;
+        let bytes = reader.pull(8);
+
+        if bytes.len() != 8 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read an I64 from this!"
+            ));
+        }
 
         /*
          * int 64 stores a 64-bit big-endian signed integer

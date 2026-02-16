@@ -30,19 +30,33 @@ impl<'a> ReadFrom<'a> for Vec<u8> {
     #[inline(always)]
     fn read_from<T: AsRef<[u8]>>(packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
         let len = match packet_type {
-            Families::BIN8 => reader.pull(1)?[0] as usize,
+            Families::BIN8 => reader.pull(1)[0] as usize,
             Families::BIN16 => {
-                let buf = reader.pull(2)?;
+                let buf = reader.pull(2);
+
+                if buf.len() != 2 {
+                    return Err(anyhow::anyhow!(
+                        "I have no idea how to read a BIN16 from this!"
+                    ));
+                }
+
                 u16::from_be_bytes([buf[0], buf[1]]) as usize
             }
             Families::BIN32 => {
-                let buf = reader.pull(4)?;
+                let buf = reader.pull(4);
+
+                if buf.len() != 4 {
+                    return Err(anyhow::anyhow!(
+                        "I have no idea how to read a BIN32 from this!"
+                    ));
+                }
+
                 u32::from_be_bytes([buf[0], buf[1], buf[2], buf[3]]) as usize
             }
             _ => 0,
         };
 
-        let data = reader.pull(len)?;
+        let data = reader.pull(len);
 
         Ok(data.to_vec())
     }

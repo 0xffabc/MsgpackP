@@ -37,7 +37,13 @@ impl<'a> ReadFrom<'a> for f32 {
      * Reads a f32 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(4)?;
+        let bytes = reader.pull(4);
+
+        if bytes.len() != 4 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read a F32 from this!"
+            ));
+        }
 
         /*
          * float 32 stores a floating point number in IEEE 754 single precision floating point number format:
@@ -93,7 +99,13 @@ impl<'a> ReadFrom<'a> for f64 {
      * Reads a f64 from the underlying buffer
      */
     fn read_from<T: AsRef<[u8]>>(_packet_type: u8, reader: &mut Reader<T>) -> Result<Self> {
-        let bytes = reader.pull(8)?;
+        let bytes = reader.pull(8);
+
+        if bytes.len() != 8 {
+            return Err(anyhow::anyhow!(
+                "I have no idea how to read a F64 from this!"
+            ));
+        }
 
         /*
          * float 64 stores a floating point number in IEEE 754 double precision floating point number format:
